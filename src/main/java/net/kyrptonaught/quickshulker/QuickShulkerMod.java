@@ -67,6 +67,13 @@ public class QuickShulkerMod implements ModInitializer, RegisterQuickShulker {
     public static final String MOD_ID = "quickshulker";
     public static ConfigManager.SingleConfigManager config = new ConfigManager.SingleConfigManager(MOD_ID, new ConfigOptions());
     public static double lastMouseX, lastMouseY;
+    /** Player-inventory index of the slot the cursor was on when the last quick-open was triggered, or -1. */
+    public static int lastCursorSlot = -1;
+    /**
+     * Where inside that slot the cursor sat, in GUI-scaled units (0..16 across the cell). Kept so the next
+     * screen restores the same relative spot instead of snapping the pointer to the slot centre.
+     */
+    public static double lastCursorOffsetX, lastCursorOffsetY;
     public static Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static ConfigOptions getConfig() {

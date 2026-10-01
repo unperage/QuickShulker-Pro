@@ -27,14 +27,17 @@
 
 package net.kyrptonaught.quickshulker.mixin.minecraft;
 
+import net.kyrptonaught.quickshulker.client.CursorFollower;
 import net.kyrptonaught.quickshulker.util.MouseDraggedHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.inventory.Slot;
 //#if MC >= 1.21.10
 import net.minecraft.client.input.MouseButtonEvent;
 //#endif
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,6 +45,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenMixin {
+
+    @Shadow
+    protected Slot hoveredSlot;
 
     @Inject(
             //#if MC >= 1.21.10
@@ -133,5 +139,8 @@ public abstract class AbstractContainerScreenMixin {
     private void QS$drawForeground(GuiGraphics context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
         MouseDraggedHandler.beforeDrawForeground(screen, context, mouseX, mouseY);
+        // The cursor follow is driven from here: on a rendered frame the panel is laid out, and passing the
+        // hovered slot lets it check whether the move it made actually landed on the item.
+        CursorFollower.pump(screen, this.hoveredSlot);
     }
 }

@@ -32,9 +32,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.client.ClientUtil;
+import net.kyrptonaught.quickshulker.client.CursorFollower;
 import net.kyrptonaught.quickshulker.client.QuickShulkerModClient;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -73,17 +73,11 @@ public abstract class ScreenMixin {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void fixMouse(CallbackInfo ci) {
-        if (QuickShulkerMod.lastMouseX != 0 && QuickShulkerMod.lastMouseY != 0) {
-            //#if MC >= 26.3
-            //$$ SDLMouse.SDL_WarpMouseInWindow(Minecraft.getInstance().getWindow().handle(), (float) QuickShulkerMod.lastMouseX, (float) QuickShulkerMod.lastMouseY);
-            //#elseif MC >= 1.21.10
-            GLFW.glfwSetCursorPos(Minecraft.getInstance().getWindow().handle(), QuickShulkerMod.lastMouseX, QuickShulkerMod.lastMouseY);
-            //#else
-            //$$ GLFW.glfwSetCursorPos(Minecraft.getInstance().getWindow().getWindow(), QuickShulkerMod.lastMouseX, QuickShulkerMod.lastMouseY);
-            //#endif
-            QuickShulkerMod.lastMouseY = 0;
-            QuickShulkerMod.lastMouseX = 0;
-        }
+        // Deferred on purpose. Subclasses like InventoryScreen and CraftingScreen reach this method through
+        // AbstractRecipeBookScreen.init(), which only assigns leftPos *after* calling super.init(), and the
+        // recipe book can move the panel again after that. CursorFollower therefore waits for the target to
+        // settle on a rendered frame instead of snapping to the coordinates it would read right here.
+        CursorFollower.beginSnap((AbstractContainerScreen<?>) (Object) this);
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
@@ -153,8 +147,7 @@ public abstract class ScreenMixin {
     private boolean isValid(ItemStack stack, int id) {
         if (this.hoveredSlot.container instanceof Inventory)
             if (ClientUtil.CheckAndSend(stack, id)) {
-                QuickShulkerMod.lastMouseX = Minecraft.getInstance().mouseHandler.xpos();
-                QuickShulkerMod.lastMouseY = Minecraft.getInstance().mouseHandler.ypos();
+                CursorFollower.remember((AbstractContainerScreen<?>) (Object) this, this.hoveredSlot);
                 return true;
             }
         return false;

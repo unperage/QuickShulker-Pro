@@ -12,6 +12,7 @@
     "minecraft.AbstractContainerScreenInvoker",
     "minecraft.AbstractContainerScreenMixin",
     "minecraft.CreativeSlotMixin",
+    "minecraft.MouseHandlerAccessor",
     "minecraft.ScreenMixin"
   ],
   "injectors": {
