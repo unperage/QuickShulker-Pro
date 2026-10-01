@@ -28,6 +28,7 @@
 package net.kyrptonaught.quickshulker.util;
 
 import com.google.common.collect.Sets;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.mixin.screen.ScreenAccessor;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.api.Util;
@@ -85,7 +86,11 @@ public class MouseDraggedHandler {
         if (!QuickShulkerMod.getConfig().supportsMouseDragged) return false;
         //#if MC >= 1.21.10
         Slot slot = ((AbstractContainerScreenInvoker) screen).QS$getSlotAt(click.x(), click.y());
-        if(slot != null && click.button() == 1){
+        // Compare against the named constant rather than a literal 1: 26.3 moved the input layer to
+        // SDL, where the right button is 3 (InputConstants.MOUSE_BUTTON_RIGHT) instead of GLFW's 1.
+        // A hardcoded 1 therefore matched the LEFT button on 26.3 and let a plain left-click start a
+        // bundle/unbundle drag, while the real right button could no longer start one at all.
+        if(slot != null && click.button() == InputConstants.MOUSE_BUTTON_RIGHT){
         //#else
         //$$ Slot slot = ((AbstractContainerScreenInvoker) screen).QS$getSlotAt(mouseX, mouseY);
         //$$ if (slot != null && button == 1) {
@@ -117,7 +122,7 @@ public class MouseDraggedHandler {
             AbstractContainerMenu handler = screen.getMenu();
             ItemStack itemStack = handler.getCarried();
             //#if MC >= 1.21.10
-            if(click.button() != 1){
+            if(click.button() != InputConstants.MOUSE_BUTTON_RIGHT){
             //#else
             //$$ if (button != 1) {
             //#endif
@@ -170,7 +175,7 @@ public class MouseDraggedHandler {
         if (dragMode != null) {
             dragMode = null;
             //#if MC >= 1.21.10
-            if(click.button() == 1 && !DRAGGED_SLOTS.isEmpty()){
+            if(click.button() == InputConstants.MOUSE_BUTTON_RIGHT && !DRAGGED_SLOTS.isEmpty()){
             //#else
             //$$ if (button == 1 && !DRAGGED_SLOTS.isEmpty()) {
             //#endif
