@@ -39,6 +39,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
+import java.util.Set;
+
 @Mixin(AbstractContainerScreen.class)
 public interface AbstractContainerScreenInvoker {
     //#if MC >= 1.21.2
@@ -54,6 +56,16 @@ public interface AbstractContainerScreenInvoker {
     //#else
     void QS$onMouseClick(Slot slot, int slotId, int button, ClickType actionType);
     //#endif
+
+    // Vanilla's drag shortcut state, used to put the slot the drag started on back into the drag set.
+    @Accessor("quickCraftSlots")
+    Set<Slot> QS$getQuickCraftSlots();
+
+    @Accessor("isQuickCrafting")
+    boolean QS$isQuickCrafting();
+
+    @Invoker("recalculateQuickCraftRemaining")
+    void QS$recalculateQuickCraftRemaining();
 
     @Accessor("menu")
     AbstractContainerMenu QS$getMenu();

@@ -118,6 +118,28 @@ public abstract class AbstractContainerScreenMixin {
         }
     }
 
+    /**
+     * Vanilla's own drag shortcut never registers the slot the press landed on: the press only opens the
+     * drag state and clears the slot set, so the stack under the cursor when the drag started was skipped
+     * until the pointer left it and came back. Put that slot back in once vanilla is done with the click.
+     */
+    @Inject(
+            //#if MC >= 1.21.10
+            method = "mouseClicked(Lnet/minecraft/client/input/MouseButtonEvent;Z)Z",
+            //#else
+            //$$ method = "mouseClicked(DDI)Z",
+            //#endif
+            at = @At("RETURN")
+    )
+    //#if MC >= 1.21.10
+    private void QS$quickCraftStart(MouseButtonEvent click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        MouseDraggedHandler.afterMouseClick((AbstractContainerScreen<?>) (Object) this, click.x(), click.y());
+    //#else
+    //$$ private void QS$quickCraftStart(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    //$$     MouseDraggedHandler.afterMouseClick((AbstractContainerScreen<?>) (Object) this, mouseX, mouseY);
+        //#endif
+    }
+
     @Inject(
             //#if MC >= 26.1
             //$$ method = "extractContents(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V",
