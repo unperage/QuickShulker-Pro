@@ -28,7 +28,6 @@
 package net.kyrptonaught.quickshulker.mixin.minecraft;
 
 import net.kyrptonaught.quickshulker.util.BundleHelper;
-import net.kyrptonaught.quickshulker.util.MouseDraggedHandler;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.client.ClientUtil;
 import net.kyrptonaught.quickshulker.network.QuickBundlePacket;
@@ -50,16 +49,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Item.class)
 public abstract class ItemMixin {
 
+    /**
+     * Local tracing switch. Deliberately not delegating to MouseDraggedHandler: that class is client-side
+     * flavoured (client-only types in its signatures), while this mixin is applied on a dedicated server
+     * too. Touching it there is what produced NoClassDefFoundError at runtime.
+     */
+    private static final boolean QS_DEBUG = Boolean.getBoolean("quickshulker.debug.drag");
+
+    private static void qsDebug(String message) {
+        if (QS_DEBUG) System.out.println("[QS-DRAG] " + message);
+    }
+
     @Inject(method = "overrideOtherStackedOnMe", at = @At("HEAD"), cancellable = true)
     public void QS$onClicked(ItemStack hostStack, ItemStack insertStack, Slot slot, ClickAction clickType, Player player, SlotAccess cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
-        MouseDraggedHandler.dbg("hook otherStackedOnMe slot=" + (slot == null ? -1 : slot.index) + " clickType=" + clickType + " client=" + player.level().isClientSide()
+        qsDebug("hook otherStackedOnMe slot=" + (slot == null ? -1 : slot.index) + " clickType=" + clickType + " client=" + player.level().isClientSide()
                 + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
                 + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
                 + " transfer=" + BundleHelper.shouldAttemptTransfer(player, clickType, hostStack, insertStack, true));
         if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingInsert)) {
             if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
-            } else if (slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) {//stupid creative menu shiz
+            } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) {//stupid creative menu shiz
                 QuickBundlePacket.sendPacket(ClientUtil.getPlayerInvSlot(player.containerMenu, slot), insertStack);
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
             }
@@ -71,14 +81,16 @@ public abstract class ItemMixin {
     @Inject(method = "overrideStackedOnOther", at = @At("HEAD"), cancellable = true)
     public void QS$onStackClicked(ItemStack hostStack, Slot slot, ClickAction clickType, Player player, CallbackInfoReturnable<Boolean> cir) {
         ItemStack insertStack = slot.getItem();
-        MouseDraggedHandler.dbg("hook stackedOnOther slot=" + slot.index + " clickType=" + clickType + " client=" + player.level().isClientSide()
-                + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
-                + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
-                + " unbundle=" + BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, true));
+        if (QS_DEBUG) {
+            qsDebug("hook stackedOnOther slot=" + slot.index + " clickType=" + clickType + " client=" + player.level().isClientSide()
+                    + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
+                    + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
+                    + " unbundle=" + BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, true));
+        }
         if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingPickup)) {//bundle stack into held item
             if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);
-            } else if (slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
+            } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
                 QuickBundlePacket.BundleIntoHeld.sendPacket(insertStack, hostStack, ClientUtil.getPlayerInvSlot(player.containerMenu, slot));
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);
                 //QuickBundlePacket.sendCreativeSlotUpdate(insertStack, slot); // It doesn't seem to be doing anything
@@ -86,7 +98,7 @@ public abstract class ItemMixin {
         } else if (BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingExtract)) {//unbundle held stack into slot
             if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
                 BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
-            } else if (slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
+            } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
                 QuickBundlePacket.UnbundlePacket.sendPacket(ClientUtil.getPlayerInvSlot(player.containerMenu, slot), hostStack);
                 BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
             }
