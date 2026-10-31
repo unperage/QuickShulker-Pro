@@ -64,9 +64,11 @@ public class ConfigOptions implements AbstractConfigFile {
 
     @Comment("Move the cursor onto the slot the new container came from when quick-switching")
     public boolean cursorFollow = true;
-    @Comment("Hold the P key (sneak) with the keybind to quick-open a container that sits inside another container instead of the player inventory")
+    @Comment("Extra key: hold it with the keybind to open a container that sits inside another container, and hold it while closing to leave the whole chain at once")
+    public CustomKeyBinding extraKey = CustomKeyBinding.configDefault(QuickShulkerMod.MOD_ID, "key.keyboard.left.shift");
+    @Comment("Allow quick-opening containers held inside another container (needs the extra key)")
     public boolean crossContainerOpen = false;
-    @Comment("Quick-opened containers stack on top of the current screen: closing returns to the previous one (hold the P key to close them all at once)")
+    @Comment("Quick-opened containers stack on top of the current screen: closing returns to the previous one (extra key while closing leaves them all)")
     public boolean nestedScreens = false;
 
     @Comment("Enable opening Shulker Boxes")

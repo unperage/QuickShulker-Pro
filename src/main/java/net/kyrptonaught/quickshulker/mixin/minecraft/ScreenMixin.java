@@ -35,6 +35,7 @@ import net.kyrptonaught.quickshulker.client.ClientUtil;
 import net.kyrptonaught.quickshulker.client.CursorFollower;
 import net.kyrptonaught.quickshulker.client.QuickShulkerModClient;
 
+import net.kyrptonaught.quickshulker.network.CloseAllPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
@@ -73,12 +74,19 @@ public abstract class ScreenMixin {
     private boolean skipNextRelease;
 
     @Inject(method = "init", at = @At("TAIL"))
-    private void fixMouse(CallbackInfo ci) {
-        // Deferred on purpose. Subclasses like InventoryScreen and CraftingScreen reach this method through
+    private void fixMouse(CallbackInfo ci) {        // Deferred on purpose. Subclasses like InventoryScreen and CraftingScreen reach this method through
         // AbstractRecipeBookScreen.init(), which only assigns leftPos *after* calling super.init(), and the
         // recipe book can move the panel again after that. CursorFollower therefore waits for the target to
         // settle on a rendered frame instead of snapping to the coordinates it would read right here.
         CursorFollower.beginSnap((AbstractContainerScreen<?>) (Object) this);
+    }
+
+    /** Holding the configurable extra key while closing drops the whole nested chain instead of one level. */
+    @Inject(method = "onClose", at = @At("HEAD"))
+    private void QS$closeAllNested(CallbackInfo ci) {
+        if (QuickShulkerMod.getConfig().nestedScreens && QuickShulkerMod.getConfig().extraKey.isKeybindPressed()) {
+            CloseAllPacket.send();
+        }
     }
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
@@ -154,10 +162,11 @@ public abstract class ScreenMixin {
             return false;
         }
         // Cross-container open: the stack sits in a chest, an ender chest or another open container.
-        // Only allowed with the option on and the P key (sneak) held down.
+        // Only allowed with the option on and the configurable extra key held down.
         if (!QuickShulkerMod.getConfig().crossContainerOpen) return false;
         Minecraft client = Minecraft.getInstance();
-        if (client.player == null || !client.player.isShiftKeyDown()) return false;
+        if (client.player == null) return false;
+        if (!QuickShulkerMod.getConfig().extraKey.isKeybindPressed()) return false;
         if (ClientUtil.CheckAndSendMenuSlot(stack, id)) {
             CursorFollower.remember((AbstractContainerScreen<?>) (Object) this, this.hoveredSlot);
             return true;

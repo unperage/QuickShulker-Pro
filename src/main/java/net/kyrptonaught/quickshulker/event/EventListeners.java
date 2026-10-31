@@ -71,10 +71,8 @@ public class EventListeners {
     }
 
     public static void containerClosedListener(ServerPlayer player){
-        // Holding the P key (sneak) while closing drops the whole chain instead of stepping back one level.
-        if (QuickShulkerMod.getConfig().nestedScreens && player.isShiftKeyDown()) {
-            NestedMenus.clear(player);
-        }
+        // The "leave everything" gesture arrives as CloseAllPacket: the extra key is configurable, so only the
+        // client knows which physical key it is bound to.
         if(QuickShulkerMod.getConfig().playSound) {
             int selectedSlot = ((ItemInventoryContainer) player.containerMenu).QS$getUsedSlotInPlayerInv();
             if (selectedSlot != -1) Util.playCloseSound(player, selectedSlot);

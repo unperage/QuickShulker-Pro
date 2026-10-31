@@ -63,6 +63,7 @@ public class ModConfigMenu {
         subItem.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.supportsMouseDragged"), options.supportsMouseDragged, true).setSaveConsumer(value -> options.supportsMouseDragged = value));
 
         ConfigSection enhanceSection = new ConfigSection(configScreen, Component.translatable("key.quickshulker.config.category.enhance"));
+        enhanceSection.addConfigItem(new KeybindItem(Component.translatable("key.quickshulker.config.extraKey"), options.extraKey.rawKey, options.extraKey.defaultKey).setSaveConsumer(value -> options.extraKey.setRaw(value)));
         enhanceSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.cursorFollow"), options.cursorFollow, true).setSaveConsumer(value -> options.cursorFollow = value));
         enhanceSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.crossContainerOpen"), options.crossContainerOpen, false).setSaveConsumer(value -> options.crossContainerOpen = value));
         enhanceSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.nestedScreens"), options.nestedScreens, false).setSaveConsumer(value -> options.nestedScreens = value));

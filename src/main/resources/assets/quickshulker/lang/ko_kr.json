@@ -2,6 +2,7 @@
   "key.categories.quickshulker": "QuickShulker-Pro",
   "key.category.quickshulker.main": "QuickShulker-Pro",
   "key.quickshulker.config.category.enhance": "향상 기능",
+  "key.quickshulker.config.extraKey": "추가 키 (단축키와 함께 누름)",
   "key.quickshulker.config.cursorFollow": "빠른 전환 시 커서가 아이템을 따라갑니다",
   "key.quickshulker.config.crossContainerOpen": "Shift + 키: 다른 컨테이너 안의 컨테이너 열기",
   "key.quickshulker.config.nestedScreens": "열린 컨테이너가 겹쳐지고 ESC로 한 단계씩 돌아갑니다",

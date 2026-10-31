@@ -2,6 +2,7 @@
   "key.categories.quickshulker": "QuickShulker-Pro",
   "key.category.quickshulker.main": "QuickShulker-Pro",
   "key.quickshulker.config.category.enhance": "Улучшения",
+  "key.quickshulker.config.extraKey": "Дополнительная клавиша (с основной клавишей)",
   "key.quickshulker.config.cursorFollow": "Курсор следует за предметом при быстром переключении",
   "key.quickshulker.config.crossContainerOpen": "Shift + клавиша: открыть контейнер внутри другого контейнера",
   "key.quickshulker.config.nestedScreens": "Открытые контейнеры наслаиваются, ESC возвращает на уровень назад",

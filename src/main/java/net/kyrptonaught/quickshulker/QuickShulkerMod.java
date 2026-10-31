@@ -40,6 +40,7 @@ import net.kyrptonaught.quickshulker.config.ConfigOptions;
 import net.kyrptonaught.quickshulker.event.EventListeners;
 import net.kyrptonaught.quickshulker.api.MenuFactory;
 import net.kyrptonaught.quickshulker.api.RegisterQuickShulker;
+import net.kyrptonaught.quickshulker.network.CloseAllPacket;
 import net.kyrptonaught.quickshulker.network.EnderChestS2CSyncPacket;
 import net.kyrptonaught.quickshulker.network.OpenInventoryPacket;
 import net.kyrptonaught.quickshulker.network.OpenShulkerPacket;
@@ -85,6 +86,7 @@ public class QuickShulkerMod implements ModInitializer, RegisterQuickShulker {
         config.load();
         OpenShulkerPacket.registerReceivePacket();
         QuickBundlePacket.registerReceivePacket();
+        CloseAllPacket.registerReceivePacket();
         EventListeners.registerEventListeners();
         LOGGER.info("QuickShulker Multi is loaded.");
 

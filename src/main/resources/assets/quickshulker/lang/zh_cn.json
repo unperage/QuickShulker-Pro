@@ -2,6 +2,7 @@
   "key.categories.quickshulker": "QuickShulker-Pro",
   "key.category.quickshulker.main": "QuickShulker-Pro",
   "key.quickshulker.config.category.enhance": "增强功能",
+  "key.quickshulker.config.extraKey": "额外按键（与快捷键同时按住）",
   "key.quickshulker.config.cursorFollow": "快捷切换时光标跟随物品",
   "key.quickshulker.config.crossContainerOpen": "Shift + 按键：打开位于其他容器内部的容器",
   "key.quickshulker.config.nestedScreens": "容器界面叠加，ESC 逐层返回",
