@@ -45,6 +45,14 @@ public class DisplayOnlyKeyBind extends KeyMapping {
      */
     private boolean readyToPersist;
 
+    /**
+     * Set for the duration of {@link net.minecraft.client.KeyMapping#resetMapping()}. That call seeds every mapping
+     * with its default key, which for these mappings is the value the config held at construction time - the exact
+     * same code path a player edit takes, so without this the default was written back over the player's choice
+     * on every launch.
+     */
+    public static boolean SUPPRESS_PERSIST;
+
     //#if MC >= 1.21.10
     public DisplayOnlyKeyBind(String translationKey, InputConstants.Type type, int code, KeyMapping.Category category) {
     //#else
@@ -73,13 +81,28 @@ public class DisplayOnlyKeyBind extends KeyMapping {
 
     public void setKey(InputConstants.@NotNull Key boundKey) {
         super.setKey(boundKey);
-        if (readyToPersist && customKeyBinding != null)
-            customKeyBinding.setRaw(saveString());
-        keySet.accept(boundKey);
+        // Deliberately not writing the value back here. Minecraft seeds every mapping with its default key during
+        // startup, and that call is indistinguishable from a real edit at this level - whichever guard is used,
+        // the default ends up overwriting the player's choice. Persistence belongs to the config screen, which
+        // knows a player edited it; this mapping only mirrors the config (see syncFromConfig).
+        if (!SUPPRESS_PERSIST)
+            keySet.accept(boundKey);
     }
 
     public void updateSetKey() {
         super.setKey(customKeyBinding.getKeybinding().orElse(InputConstants.UNKNOWN));
+    }
+
+    /**
+     * Brings the mapping back in line with the config, but only when it drifted. Called repeatedly, so it must
+     * not write anything: {@code super.setKey} bypasses the persisting override on purpose.
+     */
+    public void syncFromConfig() {
+        if (customKeyBinding == null) return;
+        InputConstants.Key wanted = customKeyBinding.getKeybinding().orElse(InputConstants.UNKNOWN);
+        if (!wanted.equals(this.key)) {
+            super.setKey(wanted);
+        }
     }
 
     @Override

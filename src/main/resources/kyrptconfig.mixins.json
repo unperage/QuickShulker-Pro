@@ -4,6 +4,7 @@
   "compatibilityLevel": "${compatibility_level}",
   "client": [
     "GameOptionsVisitorMixin",
+    "KeyMappingMixin",
     "OptionsMixin"
   ],
   "injectors": {

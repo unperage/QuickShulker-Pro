@@ -44,6 +44,22 @@ import net.minecraft.client.KeyMapping;
 //#endif
 
 public class KeyBindingRegister {
+
+    /** The bindings we registered, kept so the configured value can be re-applied once the game is up. */
+    private static final java.util.List<DisplayOnlyKeyBind> REGISTERED = new java.util.ArrayList<>();
+
+    /**
+     * Minecraft seeds every key mapping with its default key while Options is being constructed, and these
+     * mappings keep their value in the mod config rather than options.txt - so after that seeding the mapping
+     * shows the default again and nothing ever reads the configured value back. Re-applying here, once the
+     * client is running, is what makes a chosen key survive a restart.
+     */
+    public static void reapplyConfiguredKeys() {
+        for (DisplayOnlyKeyBind bind : REGISTERED) {
+            bind.syncFromConfig();
+        }
+    }
+
     //#if MC >= 1.21.11
     public static final KeyMapping.Category MAIN = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(QuickShulkerMod.MOD_ID, "main"));
     //#elseif MC >= 1.21.10
@@ -53,25 +69,26 @@ public class KeyBindingRegister {
     //#endif
 
     public static void register() {
-        //#if MC >= 26.1
-        //$$ KeyMappingHelper.registerKeyMapping(new DisplayOnlyKeyBind(
-        //#else
-        KeyBindingHelper.registerKeyBinding(new DisplayOnlyKeyBind(
-        //#endif
+        REGISTERED.add(setup(new DisplayOnlyKeyBind(
                 "key.quickshulker.config.openSettingGui",
                 MAIN,
                 QuickShulkerMod.getConfig().openSettingGui,
                 setKey -> QuickShulkerMod.config.save()
-        ));
-        //#if MC >= 26.1
-        //$$ KeyMappingHelper.registerKeyMapping(new DisplayOnlyKeyBind(
-        //#else
-        KeyBindingHelper.registerKeyBinding(new DisplayOnlyKeyBind(
-        //#endif
+        )));
+        REGISTERED.add(setup(new DisplayOnlyKeyBind(
                 "key.quickshulker.config.keybinding",
                 MAIN,
                 QuickShulkerMod.getConfig().keybinding,
                 setKey -> QuickShulkerMod.config.save()
-        ));
+        )));
+    }
+
+    private static DisplayOnlyKeyBind setup(DisplayOnlyKeyBind bind) {
+        //#if MC >= 26.1
+        //$$ KeyMappingHelper.registerKeyMapping(bind);
+        //#else
+        KeyBindingHelper.registerKeyBinding(bind);
+        //#endif
+        return bind;
     }
 }

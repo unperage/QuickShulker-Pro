@@ -30,6 +30,7 @@ package net.kyrptonaught.quickshulker.client;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -60,6 +61,14 @@ public class QuickShulkerModClient implements ClientModInitializer {
         ClientTickEvents.START_WORLD_TICK.register(ModKeyCallback::onKeyPressed);
         //#endif
         KeyBindingRegister.register();
+        // Options has already pushed the default key into every mapping by now, so read the configured value
+        // back in - otherwise the player's choice only ever survives until the next launch.
+        ClientLifecycleEvents.CLIENT_STARTED.register(client -> KeyBindingRegister.reapplyConfiguredKeys());
+        // The mapping still drifts back to the default after that event, so keep it in line every tick. The call
+        // compares first and does nothing when they already agree, so this costs no writes.
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            if (client.options != null) KeyBindingRegister.reapplyConfiguredKeys();
+        });
 
         PayloadTypeRegistry.playC2S().register(OpenInventoryPacket.OPEN_INV_ID, OpenInventoryPacket.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(OpenInventoryPacket.OPEN_INV_ID, (payload, context) ->

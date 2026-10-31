@@ -107,11 +107,17 @@ public class BundleHelper {
             // This drag already put a stack into this slot; the click arriving now is the duplicate one that
             // follows the insert. Cancel it outright - returning null here would fall through to vanilla, which
             // places the carried shulker into the slot instead of doing nothing.
+            if (cir != null) cir.setReturnValue(true);
             return;
         }
         ItemStack output = unbundleItem(player, hostStack, unbundleSlot);
         if (output != null) {
             unbundleSlot.setByPlayer(output);
+            cir.setReturnValue(true);
+        }
+        else if (cir != null) {
+            // Nothing came out: the shulker is empty or the slot refused it. This click was ours, so
+            // mark it handled - otherwise vanilla runs and drops the carried box into the slot.
             cir.setReturnValue(true);
         }
     }

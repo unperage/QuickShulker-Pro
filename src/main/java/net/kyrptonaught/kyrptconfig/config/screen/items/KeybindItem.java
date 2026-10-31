@@ -72,6 +72,10 @@ public class KeybindItem extends ConfigItem<String> {
         super.setValue(value);
         isListening = false;
         ConflictHandler.updateCustomConflicts();
+        // Persist immediately. setValue only updates the in-memory value; without this the binding is written
+        // out whenever the screen happens to be closed, and a player who quits straight from the screen loses
+        // the key they just set.
+        save();
     }
 
     public MutableComponent getCleanName(String str) {
