@@ -40,14 +40,14 @@ public class ModKeyCallback {
     public static void onKeyPressed(ClientLevel clientWorld) {
         Minecraft mc = Minecraft.getInstance();
         ConfigOptions configs = QuickShulkerMod.getConfig();
-        if (configs.openSettingGui.isKeybindPressed()) {
+        if (configs.openSettingGui.wasPressed()) {
             //#if MC >= 26.2
             //$$ mc.gui.setScreen(ModConfigMenu.getModConfigMenu(mc.gui.screen()));
             //#else
             mc.setScreen(ModConfigMenu.getModConfigMenu(mc.screen));
             //#endif
         }
-        if (configs.keybinding.isKeybindPressed()) {
+        if (configs.keybinding.wasPressed()) {
             Player player = mc.player;
             //#if MC >= 26.2
             //$$ if (mc.gui.screen() == null && QuickShulkerMod.getConfig().keybind && player != null && !player.isSpectator()) {
