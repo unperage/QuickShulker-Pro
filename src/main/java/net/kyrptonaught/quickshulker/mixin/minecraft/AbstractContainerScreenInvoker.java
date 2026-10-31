@@ -50,9 +50,23 @@ public interface AbstractContainerScreenInvoker {
     //#endif
     Slot QS$getSlotAt(double mouseX, double mouseY);
 
+    /**
+     * The slot the screen currently considers hovered. Mouse events carry window coordinates, so resolving the
+     * slot from them lands on the wrong cell; this field is the one vanilla already resolved for that event.
+     */
+    @Accessor("hoveredSlot")
+    Slot QS$getHoveredSlot();
+
     @Invoker("slotClicked")
     //#if MC >= 26.1
     //$$ void QS$onMouseClick(Slot slot, int slotId, int button, ContainerInput actionType);
+
+    /**
+     * 26.x overload that takes the whole mouse event; it is the one vanilla's own click handlers call, and it
+     * carries the button and modifiers through instead of a bare button id.
+     */
+    //$$ @Invoker("slotClicked")
+    //$$ void QS$onMouseClickWithEvent(Slot slot, int slotId, net.minecraft.client.input.MouseButtonEvent event, ContainerInput actionType);
     //#else
     void QS$onMouseClick(Slot slot, int slotId, int button, ClickType actionType);
     //#endif

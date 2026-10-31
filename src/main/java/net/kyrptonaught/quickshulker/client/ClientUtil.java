@@ -27,6 +27,7 @@
 
 package net.kyrptonaught.quickshulker.client;
 
+import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.api.ItemInventoryContainer;
 import net.kyrptonaught.quickshulker.api.Util;
 import net.kyrptonaught.quickshulker.mixin.minecraft.CreativeSlotMixin;
@@ -61,7 +62,8 @@ public class ClientUtil {
     }
 
     private static void SendOpenPacket(int slot) {
-        OpenShulkerPacket.sendOpenPacket(slot);
+        // The nesting switch is a client setting, so it has to ride along: the server has no way to read it.
+        OpenShulkerPacket.sendOpenPacket(slot, QuickShulkerMod.getConfig().nestedScreens);
     }
 
     public static boolean isCreativeScreen(Player player) {

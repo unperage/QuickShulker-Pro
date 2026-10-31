@@ -55,11 +55,12 @@ public class ContainerOpenMixin {
     @Inject(method = "doCloseContainer()V", at = @At("TAIL"))
     private void onCloseContainerTail(CallbackInfo ci) {
         ServerPlayer player = (ServerPlayer) (Object) this;
+        NestedMenus.trace(player, "close TAIL");
         if (player.hasDisconnected() || !NestedMenus.enabled()) {
             NestedMenus.clear(player);
             return;
         }
-        if (!NestedMenus.isRestoring(player)) {
+        if (!NestedMenus.isRestoring(player) && !NestedMenus.isOpening(player)) {
             NestedMenus.restoreOne(player);
         }
     }

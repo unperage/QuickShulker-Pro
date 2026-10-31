@@ -41,6 +41,14 @@ public interface ItemInventoryContainer {
     void QS$setUsedSlot(int playerInvSlotID);
 
     /**
+     * True when this menu was opened by QuickShulker. Menus for blocks (crafting table, anvil, ...) validate the
+     * player's position against a real block, so a menu opened from an item has to be allowed through explicitly.
+     */
+    boolean QS$isQuickOpened();
+
+    void QS$setQuickOpened(boolean opened);
+
+    /**
      * A slot inside the player inventory is stored as-is (>= 0). A slot that lives in another container -
      * a chest, an ender chest, a shulker the player already has open - cannot collide with those, so it is
      * stored as a negative number: {@code -(menuSlotIndex + 2)}. {@code -1} stays reserved for "no container".

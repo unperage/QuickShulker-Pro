@@ -168,8 +168,10 @@ public abstract class ScreenMixin {
         if (client.player == null) return false;
         if (!QuickShulkerMod.getConfig().extraKey.isKeybindPressed()) return false;
         if (ClientUtil.CheckAndSendMenuSlot(stack, id)) {
-            // No cursor follow here on purpose: the source slot lives in another container, so the item the
-            // player came from is not in the screen about to open.
+            // No slot to follow here: the source slot lives in another container, so the item the player came
+            // from is not on the screen that is about to open. Keep the pointer at its current position instead
+            // of letting the new screen reset it to the centre of the window.
+            CursorFollower.rememberPosition();
             return true;
         }
         return false;

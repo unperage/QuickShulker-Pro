@@ -44,16 +44,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class Util {
 
-    public static void openItem(Player player, int invSlot) {
+    public static void openItem(Player player, int invSlot, boolean nest) {
         if (ItemInventoryContainer.isMenuSlot(invSlot)) {
-            openItemFromMenuSlot(player, ItemInventoryContainer.menuSlotOf(invSlot));
+            openItemFromMenuSlot(player, ItemInventoryContainer.menuSlotOf(invSlot), nest);
             return;
         }
         if (invSlot < 0 || invSlot >= player.containerMenu.slots.size()) {
             System.out.println("[QuickShulker Multi]: unknown slot opened");
             return;
         }
-        openItem(player, invSlot, player.containerMenu.slots.get(invSlot).getContainerSlot());
+        openItem(player, invSlot, player.containerMenu.slots.get(invSlot).getContainerSlot(), nest);
     }
 
     /**
@@ -62,24 +62,46 @@ public class Util {
      * slot, and the used-slot marker stores that menu slot, so closing and the "item vanished" guard keep
      * working the same way they do for the inventory path.
      */
-    public static void openItemFromMenuSlot(Player player, int menuSlotIndex) {
-        if (menuSlotIndex < 0 || menuSlotIndex >= player.containerMenu.slots.size()) return;
+    public static void openItemFromMenuSlot(Player player, int menuSlotIndex, boolean nest) {
+        if (menuSlotIndex < 0 || menuSlotIndex >= player.containerMenu.slots.size()) {
+            return;
+        }
         Slot sourceSlot = player.containerMenu.slots.get(menuSlotIndex);
         ItemStack stack = sourceSlot.getItem();
-        if (stack.isEmpty()) return;
+        if (stack.isEmpty()) {
+            return;
+        }
         int marker = ItemInventoryContainer.encodeMenuSlot(menuSlotIndex);
-        if (QuickShulkerMod.getConfig().rightClickClose && marker == ((ItemInventoryContainer) player.containerMenu).QS$getUsedSlotInPlayerInv()) {
+        // The used-slot marker only makes sense for the player inventory path, where it is a real inventory
+        // index. A menu slot marker is negative; comparing two of them made every click on the same index look
+        // like "right click to close", which closed the container and dropped the player into their inventory.
+        int usedSlot = ((ItemInventoryContainer) player.containerMenu).QS$getUsedSlotInPlayerInv();
+        if (QuickShulkerMod.getConfig().rightClickClose && usedSlot >= 0 && marker == usedSlot) {
             ((ServerPlayer) player).closeContainer();
             OpenInventoryPacket.send((ServerPlayer) player);
             return;
         }
         QuickShulkerData qsData = QuickOpenableRegistry.getQuickie(stack.getItem());
-        if (qsData == null) return;
-        if (player instanceof ServerPlayer sp) NestedMenus.captureCurrent(sp);
-        qsData.openConsumer.accept(player, stack);
+        if (qsData == null) {
+            return;
+        }
+        if (player instanceof ServerPlayer sp) {
+            NestedMenus.captureCurrent(sp, nest);
+            NestedMenus.beginOpening(sp);
+        }
+        try {
+            qsData.openConsumer.accept(player, stack);
+        } finally {
+            if (player instanceof ServerPlayer sp) NestedMenus.endOpening(sp);
+        }
         if (QuickShulkerMod.getConfig().playSound) playSound(player, qsData.getSound(stack, true));
-        ((ItemInventoryContainer) player.containerMenu).QS$setUsedSlot(marker);
-        player.containerMenu.addSlotListener(forceCloseScreenIfNotPresent(player, sourceSlot, stack));
+        // A container opened from another container has no player-inventory slot, so the "right click the
+        // opened shulker to close it" gesture must stay off for this menu.
+        ((ItemInventoryContainer) player.containerMenu).QS$setUsedSlot(-1);
+        ((ItemInventoryContainer) player.containerMenu).QS$setQuickOpened(true);
+        // No "item vanished" listener here: sourceSlot belongs to the menu that openMenu just closed, so its
+        // getItem() reads empty right away and the guard would close the new container on the spot. The stack
+        // lives in another container, which cannot lose it by opening it, so the guard is not needed at all.
     }
 
     /**
@@ -92,12 +114,17 @@ public class Util {
         if (stack.isEmpty()) return;
         QuickShulkerData qsData = QuickOpenableRegistry.getQuickie(stack.getItem());
         if (qsData == null) return;
-        if (!restoring) NestedMenus.captureCurrent(player);
-        qsData.openConsumer.accept(player, stack);
+        if (!restoring) NestedMenus.captureCurrent(player, true);
+        NestedMenus.beginOpening(player);
+        try {
+            qsData.openConsumer.accept(player, stack);
+        } finally {
+            NestedMenus.endOpening(player);
+        }
         if (QuickShulkerMod.getConfig().playSound) playSound(player, qsData.getSound(stack, true));
     }
 
-    public static void openItem(Player player, int invSlot, int playerInvIndex) {
+    public static void openItem(Player player, int invSlot, int playerInvIndex, boolean nest) {
         if (QuickShulkerMod.getConfig().rightClickClose && playerInvIndex == ((ItemInventoryContainer) player.containerMenu).QS$getUsedSlotInPlayerInv()) {
             ((ServerPlayer) player).closeContainer();
             OpenInventoryPacket.send((ServerPlayer) player);
@@ -107,10 +134,18 @@ public class Util {
         //stack.removeSubNbt(QuickShulkerMod.MOD_ID);
         QuickShulkerData qsData = QuickOpenableRegistry.getQuickie(stack.getItem());
         if (qsData != null) {
-            if (player instanceof ServerPlayer sp) NestedMenus.captureCurrent(sp);
-            qsData.openConsumer.accept(player, stack);
+            if (player instanceof ServerPlayer sp) {
+                NestedMenus.captureCurrent(sp, nest);
+                NestedMenus.beginOpening(sp);
+            }
+            try {
+                qsData.openConsumer.accept(player, stack);
+            } finally {
+                if (player instanceof ServerPlayer sp) NestedMenus.endOpening(sp);
+            }
             if(QuickShulkerMod.getConfig().playSound) playSound(player, qsData.getSound(stack, true));
             ((ItemInventoryContainer) player.containerMenu).QS$setUsedSlot(playerInvIndex);
+            ((ItemInventoryContainer) player.containerMenu).QS$setQuickOpened(true);
             player.containerMenu.addSlotListener(forceCloseScreenIfNotPresent(player, playerInvIndex, stack));
         }
     }

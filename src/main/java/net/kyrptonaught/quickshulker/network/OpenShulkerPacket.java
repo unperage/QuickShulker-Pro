@@ -40,7 +40,12 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-public record OpenShulkerPacket(int invSlot) implements CustomPacketPayload {
+/**
+ * @param invSlot the menu slot to open, negative for a slot that lives in another container
+ * @param nest    whether the client wants this open to be stacked, so closing it returns to the previous screen.
+ *                The setting lives on the client, so it has to travel with the request - the server cannot read it.
+ */
+public record OpenShulkerPacket(int invSlot, boolean nest) implements CustomPacketPayload {
 
     //#if MC <= 1.20.6
     //$$ public static final ResourceLocation OPEN_SHULKER_PACKET = ResourceLocation.tryBuild(QuickShulkerMod.MOD_ID, "open_shulker_packet");
@@ -52,17 +57,22 @@ public record OpenShulkerPacket(int invSlot) implements CustomPacketPayload {
 
     public static final Type<OpenShulkerPacket> OPEN_SHULKER_PACKET_ID = new Type<>(OPEN_SHULKER_PACKET);
 
-    public static final StreamCodec<FriendlyByteBuf, OpenShulkerPacket> CODEC = StreamCodec.ofMember((value, buf) -> buf.writeInt(value.invSlot), buf -> new OpenShulkerPacket(buf.readInt()));
+    public static final StreamCodec<FriendlyByteBuf, OpenShulkerPacket> CODEC = StreamCodec.ofMember(
+            (value, buf) -> {
+                buf.writeInt(value.invSlot);
+                buf.writeBoolean(value.nest);
+            },
+            buf -> new OpenShulkerPacket(buf.readInt(), buf.readBoolean()));
 
     public static void registerReceivePacket() {
         PayloadTypeRegistry.playC2S().register(OpenShulkerPacket.OPEN_SHULKER_PACKET_ID, OpenShulkerPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenShulkerPacket.OPEN_SHULKER_PACKET_ID, OpenShulkerPacket.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(OpenShulkerPacket.OPEN_SHULKER_PACKET_ID, (payload, context) -> context.server().execute(() -> Util.openItem(context.player(), payload.invSlot)));
+        ServerPlayNetworking.registerGlobalReceiver(OpenShulkerPacket.OPEN_SHULKER_PACKET_ID, (payload, context) -> context.server().execute(() -> Util.openItem(context.player(), payload.invSlot(), payload.nest())));
     }
 
     @Environment(EnvType.CLIENT)
-    public static void sendOpenPacket(int invSlot) {
-        ClientPlayNetworking.send(new OpenShulkerPacket(invSlot));
+    public static void sendOpenPacket(int invSlot, boolean nest) {
+        ClientPlayNetworking.send(new OpenShulkerPacket(invSlot, nest));
     }
 
     @Override

@@ -99,6 +99,23 @@ public final class CursorFollower {
         QuickShulkerMod.lastCursorOffsetY = QuickShulkerMod.lastMouseY / scaleY - (invoker.QS$getTopPos() + slot.y);
     }
 
+    /**
+     * Records where the pointer is without attaching it to a slot.
+     * <p>
+     * Used when the opened container came from another container: there is no matching slot on the screen that
+     * is about to open, but the pointer should still stay where the player left it instead of being reset to the
+     * centre of the window when the new screen grabs the mouse.
+     */
+    public static void rememberPosition() {
+        if (!QuickShulkerMod.getConfig().cursorFollow) return;
+        Minecraft minecraft = Minecraft.getInstance();
+        QuickShulkerMod.lastMouseX = minecraft.mouseHandler.xpos();
+        QuickShulkerMod.lastMouseY = minecraft.mouseHandler.ypos();
+        QuickShulkerMod.lastCursorSlot = -1;
+        QuickShulkerMod.lastCursorOffsetX = 0;
+        QuickShulkerMod.lastCursorOffsetY = 0;
+    }
+
     /** Marks the screen that just finished initialising as the one to move the cursor on. */
     public static void beginSnap(AbstractContainerScreen<?> screen) {
         if (!QuickShulkerMod.getConfig().cursorFollow) return;

@@ -55,6 +55,12 @@ public abstract class CraftingScreenHandlerMixin extends AbstractContainerMenu {
 
     @Inject(method = "stillValid", at = @At("HEAD"), cancellable = true)
     public void overrideCanUse(Player player, CallbackInfoReturnable<Boolean> cir) {
+        // Any menu QuickShulker opened is valid on its own: a block menu validates the player's position against
+        // a real block, which never matches when the block came out of an item.
+        if (((ItemInventoryContainer) this).QS$isQuickOpened()) {
+            cir.setReturnValue(true);
+            return;
+        }
         if (((ItemInventoryContainer) this).hasItem()) {
             ItemStack stack = Util.getItemInUsedSlot(player, ((ItemInventoryContainer) this).QS$getUsedSlotInPlayerInv());
             if (Util.isOpenableItem(stack))

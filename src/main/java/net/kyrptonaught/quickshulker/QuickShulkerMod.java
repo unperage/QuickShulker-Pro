@@ -97,11 +97,11 @@ public class QuickShulkerMod implements ModInitializer, RegisterQuickShulker {
                     if (Util.isOpenableItem(stack) && Util.canOpenInHand(stack)) {
                         if (hand == InteractionHand.MAIN_HAND)
                             //#if MC >= 1.21.5
-                            Util.openItem(player, 0, player.getInventory().getSelectedSlot());
+                            Util.openItem(player, 0, player.getInventory().getSelectedSlot(), true);
                             //#else
-                            //$$ Util.openItem(player, 0, player.getInventory().selected);
+                            //$$ Util.openItem(player, 0, player.getInventory().selected, true);
                             //#endif
-                        else Util.openItem(player, 0, Inventory.SLOT_OFFHAND);
+                        else Util.openItem(player, 0, Inventory.SLOT_OFFHAND, true);
 
                         //#if MC >= 1.21.2
                         return InteractionResult.SUCCESS_SERVER;

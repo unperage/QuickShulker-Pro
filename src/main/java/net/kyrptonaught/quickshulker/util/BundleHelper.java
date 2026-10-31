@@ -84,6 +84,12 @@ public class BundleHelper {
     }
 
     public static void unbundleStackIntoSlot(Player player, ItemStack hostStack, Slot unbundleSlot, CallbackInfoReturnable<Boolean> cir) {
+        if (net.kyrptonaught.quickshulker.util.MouseDraggedHandler.wasJustBundled(unbundleSlot)) {
+            // This drag already put a stack into this slot; the click arriving now is the duplicate one that
+            // follows the insert. Cancel it outright - returning null here would fall through to vanilla, which
+            // places the carried shulker into the slot instead of doing nothing.
+            return;
+        }
         ItemStack output = unbundleItem(player, hostStack, unbundleSlot);
         if (output != null) {
             unbundleSlot.setByPlayer(output);
@@ -113,6 +119,7 @@ public class BundleHelper {
     }
 
     public static ItemStack unbundleItem(Player player, ItemStack hostStack, Slot unbundleSlot) {
+
         Container inv = Util.getQuickItemInventory(player, hostStack);
         ItemStack output = null;
         assert inv != null;
@@ -159,6 +166,7 @@ public class BundleHelper {
         int amount = insertIntoInv(bundlingInv, player, hostStack, insertStack);
         if (amount != 0) {
             insertStack = slot.safeTake(amount, insertStack.getCount(), player);
+            net.kyrptonaught.quickshulker.util.MouseDraggedHandler.markBundled(slot);
             return insertStack;
         }
         return null;

@@ -65,6 +65,17 @@ public abstract class ContainerMixin implements ItemInventoryContainer {
         this.playerInvSlot = playerInvSlotID;
     }
 
+    @Unique
+    boolean quickOpened = false;
+
+    public boolean QS$isQuickOpened() {
+        return quickOpened;
+    }
+
+    public void QS$setQuickOpened(boolean opened) {
+        this.quickOpened = opened;
+    }
+
     @Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
     //#if MC >= 26.1
     //$$ public void QS$onClick(int slotId, int button, ContainerInput actionType, Player player, CallbackInfo ci) {

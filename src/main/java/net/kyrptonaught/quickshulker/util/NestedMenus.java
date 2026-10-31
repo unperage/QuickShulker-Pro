@@ -33,9 +33,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.ShulkerBoxMenu;
+import net.minecraft.world.inventory.Slot;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -62,6 +65,7 @@ public final class NestedMenus {
     private static final class Frame {
         static final int KIND_INVENTORY = 0;
         static final int KIND_CHEST = 1;
+        static final int KIND_SHULKER = 2;
 
         final int kind;
         final Container container;
@@ -76,14 +80,33 @@ public final class NestedMenus {
 
     private static final Map<ServerPlayer, Deque<Frame>> STACKS = new WeakHashMap<>();
     private static final Set<ServerPlayer> RESTORING = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final Set<ServerPlayer> OPENING = Collections.newSetFromMap(new WeakHashMap<>());
     private static final int MAX_DEPTH = 16;
 
     public static boolean enabled() {
-        return QuickShulkerMod.getConfig().nestedScreens;
+        // The switch lives on the client and travels with each open request; the server never reads it.
+        return true;
     }
 
     public static boolean isRestoring(ServerPlayer player) {
         return RESTORING.contains(player);
+    }
+
+    /**
+     * True while a quick-open is in flight. {@code openMenu} closes the current menu first, and that close must not
+     * be mistaken for the player leaving the new container - otherwise the level captured a moment ago would be
+     * restored immediately and the stack would be empty by the time the new container is closed.
+     */
+    public static boolean isOpening(ServerPlayer player) {
+        return OPENING.contains(player);
+    }
+
+    public static void beginOpening(ServerPlayer player) {
+        OPENING.add(player);
+    }
+
+    public static void endOpening(ServerPlayer player) {
+        OPENING.remove(player);
     }
 
     private static void push(ServerPlayer player, Frame frame) {
@@ -97,19 +120,61 @@ public final class NestedMenus {
      * Called right before a container is quick-opened: records whatever the player is looking at now, so it can
      * come back once the new container is closed.
      */
-    public static void captureCurrent(ServerPlayer player) {
-        if (!enabled() || isRestoring(player)) return;
+    public static void captureCurrent(ServerPlayer player, boolean nest) {
+        if (!nest || isRestoring(player)) {
+            debug(player, "capture skipped nest=" + nest + " restoring=" + isRestoring(player));
+            return;
+        }
         AbstractContainerMenu menu = player.containerMenu;
         if (menu instanceof ChestMenu chest && chest.getContainer() != null) {
             push(player, new Frame(Frame.KIND_CHEST, chest.getContainer(), chest.getRowCount()));
+            debug(player, "capture chest rows=" + chest.getRowCount() + " depth=" + depth(player));
             return;
         }
+        // A quick-opened shulker is a ShulkerBoxMenu, not a ChestMenu: it has to be recognised or the level
+        // underneath it would be recorded as "player inventory" and closing would skip it.
+        if (menu instanceof ShulkerBoxMenu) {
+            Container container = containerOf(menu);
+            if (container != null) {
+                push(player, new Frame(Frame.KIND_SHULKER, container, 3));
+                debug(player, "capture shulker size=" + container.getContainerSize() + " depth=" + depth(player));
+                return;
+            }
+        }
         push(player, new Frame(Frame.KIND_INVENTORY, null, 0));
+        debug(player, "capture inventory menu=" + menu.getClass().getSimpleName() + " depth=" + depth(player));
+    }
+
+    /** First non-player container backing this menu's slots, or null when there is none. */
+    private static Container containerOf(AbstractContainerMenu menu) {
+        for (Slot slot : menu.slots) {
+            if (slot.container == null) continue;
+            if (slot.container instanceof Inventory) continue;
+            return slot.container;
+        }
+        return null;
+    }
+
+    private static int depth(ServerPlayer player) {
+        Deque<Frame> stack = STACKS.get(player);
+        return stack == null ? 0 : stack.size();
+    }
+
+    /** Opt-in tracing: start the client with -Dquickshulker.debug.nested=true. */
+    private static final boolean DEBUG = Boolean.getBoolean("quickshulker.debug.nested");
+
+    private static void debug(ServerPlayer player, String message) {
+        if (DEBUG) System.out.println("[QS-NEST] " + player.getName().getString() + ": " + message);
     }
 
     public static boolean isEmpty(ServerPlayer player) {
         Deque<Frame> stack = STACKS.get(player);
         return stack == null || stack.isEmpty();
+    }
+
+    /** TEMPORARY diagnostics hook used by the mixin while the stack is being traced. */
+    public static void trace(ServerPlayer player, String message) {
+        debug(player, message + " depth=" + depth(player) + " opening=" + isOpening(player) + " restoring=" + isRestoring(player));
     }
 
     public static void clear(ServerPlayer player) {
@@ -120,12 +185,18 @@ public final class NestedMenus {
     /** Puts the previous level back. Returns true when a level was restored. */
     public static boolean restoreOne(ServerPlayer player) {
         Deque<Frame> stack = STACKS.get(player);
-        if (stack == null || stack.isEmpty()) return false;
+        if (stack == null || stack.isEmpty()) {
+            debug(player, "restore skipped: stack empty");
+            return false;
+        }
         Frame frame = stack.pop();
+        debug(player, "restore kind=" + frame.kind + " rows=" + frame.rows + " depth=" + stack.size());
         RESTORING.add(player);
         try {
             if (frame.kind == Frame.KIND_INVENTORY || frame.container == null) {
                 OpenInventoryPacket.send(player);
+            } else if (frame.kind == Frame.KIND_SHULKER) {
+                openShulker(player, frame.container);
             } else {
                 openChest(player, frame.container, frame.rows);
             }
@@ -133,6 +204,12 @@ public final class NestedMenus {
             RESTORING.remove(player);
         }
         return true;
+    }
+
+    private static void openShulker(ServerPlayer player, Container container) {
+        player.openMenu(new SimpleMenuProvider(
+                (windowId, inventory, owner) -> new ShulkerBoxMenu(windowId, inventory, container),
+                Component.translatable("container.shulkerBox")));
     }
 
     private static void openChest(ServerPlayer player, Container container, int rows) {
