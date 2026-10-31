@@ -28,6 +28,7 @@
 package net.kyrptonaught.quickshulker.mixin.minecraft;
 
 import net.kyrptonaught.quickshulker.event.EventListeners;
+import net.kyrptonaught.quickshulker.util.NestedMenus;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,5 +49,18 @@ public class ContainerOpenMixin {
     @Inject(method = "doCloseContainer()V", at = @At("HEAD"))
     private void onCloseContainer(CallbackInfo ci) {
         EventListeners.containerClosedListener((ServerPlayer) (Object) this);
+    }
+
+    /** Puts the previous screen back once the container is really closed, so no recursion happens. */
+    @Inject(method = "doCloseContainer()V", at = @At("TAIL"))
+    private void onCloseContainerTail(CallbackInfo ci) {
+        ServerPlayer player = (ServerPlayer) (Object) this;
+        if (player.hasDisconnected() || !NestedMenus.enabled()) {
+            NestedMenus.clear(player);
+            return;
+        }
+        if (!NestedMenus.isRestoring(player)) {
+            NestedMenus.restoreOne(player);
+        }
     }
 }

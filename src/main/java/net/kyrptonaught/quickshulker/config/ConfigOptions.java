@@ -62,6 +62,13 @@ public class ConfigOptions implements AbstractConfigFile {
     @Comment("Right Clicking and Dragging with a shulker to bulk insert or extract items")
     public boolean supportsMouseDragged = true;
 
+    @Comment("Move the cursor onto the slot the new container came from when quick-switching")
+    public boolean cursorFollow = true;
+    @Comment("Hold the P key (sneak) with the keybind to quick-open a container that sits inside another container instead of the player inventory")
+    public boolean crossContainerOpen = false;
+    @Comment("Quick-opened containers stack on top of the current screen: closing returns to the previous one (hold the P key to close them all at once)")
+    public boolean nestedScreens = false;
+
     @Comment("Enable opening Shulker Boxes")
     public boolean quickShulkerBox = true;
     @Comment("Enable opening Crafting Tables")

@@ -59,6 +59,19 @@ public class MouseDraggedHandler {
     private static final Set<Slot> DRAGGED_SLOTS = Sets.newHashSet();
     private static DragMode dragMode;
 
+    /** Opt-in tracing for the drag path: start the client with -Dquickshulker.debug.drag=true. */
+    public static final boolean DEBUG = Boolean.getBoolean("quickshulker.debug.drag");
+
+    public static void dbg(String message) {
+        if (DEBUG) System.out.println("[QS-DRAG] " + message);
+    }
+
+    /** TEMPORARY diagnostic helper. */
+    public static String desc(ItemStack stack) {
+        if (stack == null) return "null";
+        return (stack.isEmpty() ? "empty" : stack.getItem().getDescriptionId()) + " x" + stack.getCount();
+    }
+
     public static boolean canInsertIntoContainer(Player player, ItemStack hostStack, ItemStack insertStack) {
         Container inv = Util.getQuickItemInventory(player, hostStack);
         if (inv == null) return false;
@@ -86,6 +99,9 @@ public class MouseDraggedHandler {
      */
     public static void afterMouseClick(AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
         AbstractContainerScreenInvoker invoker = (AbstractContainerScreenInvoker) screen;
+        dbg("afterClick: isQuickCrafting=" + invoker.QS$isQuickCrafting()
+                + " quickCraftSlots=" + (invoker.QS$getQuickCraftSlots() == null ? "null" : invoker.QS$getQuickCraftSlots().size())
+                + " carried=" + desc(screen.getMenu().getCarried()));
         if (!invoker.QS$isQuickCrafting()) return;
         Set<Slot> quickCraftSlots = invoker.QS$getQuickCraftSlots();
         if (quickCraftSlots == null || !quickCraftSlots.isEmpty()) return;
@@ -96,6 +112,7 @@ public class MouseDraggedHandler {
             return;
         if (quickCraftSlots.add(slot)) {
             invoker.QS$recalculateQuickCraftRemaining();
+            dbg("afterClick: registered starting slot " + slot.index);
         }
     }
 
@@ -104,11 +121,17 @@ public class MouseDraggedHandler {
      * the cursor passes over while the button is held, so the stack the drag started on is not skipped.
      */
     private static boolean applyDragAction(AbstractContainerScreen<?> screen, Slot slot, ItemStack itemStack, int rawButton) {
-        if (dragMode == null || slot == null || DRAGGED_SLOTS.contains(slot)) return false;
+        if (dragMode == null || slot == null || DRAGGED_SLOTS.contains(slot)) {
+            dbg("apply: skipped mode=" + dragMode + " slot=" + (slot == null ? "null" : slot.index) + " alreadyDragged=" + (slot != null && DRAGGED_SLOTS.contains(slot)));
+            return false;
+        }
         Minecraft client = ((ScreenAccessor) screen).getClient();
         if (client.player == null) return false;
         AbstractContainerMenu handler = screen.getMenu();
-        if (!handler.canDragTo(slot) && !slot.mayPickup(client.player)) return false;
+        if (!handler.canDragTo(slot) && !slot.mayPickup(client.player)) {
+            dbg("apply: slot " + slot.index + " cannot drag or pickup");
+            return false;
+        }
         boolean bundle = dragMode == DragMode.BUNDLE
                 && slot.hasItem()
                 && canInsertIntoContainer(client.player, itemStack, slot.getItem())
@@ -116,8 +139,13 @@ public class MouseDraggedHandler {
         boolean unbundle = dragMode == DragMode.UNBUNDLE
                 && !slot.hasItem()
                 && !isContainerEmpty(client.player, itemStack);
-        if (!bundle && !unbundle) return false;
+        if (!bundle && !unbundle) {
+            dbg("apply: slot " + slot.index + " rejected mode=" + dragMode + " hasItem=" + slot.hasItem()
+                    + " carried=" + desc(itemStack) + " slotItem=" + desc(slot.getItem()));
+            return false;
+        }
         DRAGGED_SLOTS.add(slot);
+        dbg("apply: slot " + slot.index + " " + (bundle ? "BUNDLE" : "UNBUNDLE") + " raw=" + rawButton + " -> containerButton=" + toContainerButton(rawButton));
         //#if MC >= 26.1
         //$$ ((AbstractContainerScreenInvoker) screen).QS$onMouseClick(slot, slot.index, toContainerButton(rawButton), ContainerInput.PICKUP);
         //#elseif MC >= 1.21.10
@@ -156,6 +184,8 @@ public class MouseDraggedHandler {
         if (!QuickShulkerMod.getConfig().supportsMouseDragged) return false;
         //#if MC >= 1.21.10
         Slot slot = ((AbstractContainerScreenInvoker) screen).QS$getSlotAt(click.x(), click.y());
+        dbg("press: raw=" + click.button() + " RIGHT=" + InputConstants.MOUSE_BUTTON_RIGHT + " slot=" + (slot == null ? "null" : slot.index)
+                + " carried=" + desc(screen.getMenu().getCarried()) + " isQuickCrafting=" + ((AbstractContainerScreenInvoker) screen).QS$isQuickCrafting());
         // Compare against the named constant rather than a literal 1: 26.3 moved the input layer to
         // SDL, where the right button is 3 (InputConstants.MOUSE_BUTTON_RIGHT) instead of GLFW's 1.
         // A hardcoded 1 therefore matched the LEFT button on 26.3 and let a plain left-click start a
@@ -168,20 +198,22 @@ public class MouseDraggedHandler {
             Minecraft client = ((ScreenAccessor) screen).getClient();
             ItemStack itemStack = screen.getMenu().getCarried();
             Container inv = Util.getQuickItemInventory(client.player, itemStack);
+            dbg("press: container=" + (inv == null ? "null" : "ok") + " player=" + (client.player == null ? "null" : "ok"));
             if (inv == null) return false;
             if (slot.hasItem()) {
                 dragMode = DragMode.BUNDLE;
             } else {
                 dragMode = DragMode.UNBUNDLE;
             }
+            dbg("press: mode=" + dragMode);
             DRAGGED_SLOTS.clear();
             // The press that opens the drag acts on its own slot right away. Slots are otherwise only
             // collected from mouse-motion events, so the stack the cursor started on would stay untouched
             // until the pointer left it and came back - the "first stack is always missed" behaviour.
             //#if MC >= 1.21.10
-            applyDragAction(screen, slot, itemStack, click.button());
+            dbg("press: applied=" + applyDragAction(screen, slot, itemStack, click.button()));
             //#else
-            //$$ applyDragAction(screen, slot, itemStack, button);
+            //$$ dbg("press: applied=" + applyDragAction(screen, slot, itemStack, button));
             //#endif
             return true;
         }
@@ -206,7 +238,9 @@ public class MouseDraggedHandler {
         }
         //#if MC >= 1.21.10
         Slot slot = ((AbstractContainerScreenInvoker) screen).QS$getSlotAt(click.x(), click.y());
-        return applyDragAction(screen, slot, screen.getMenu().getCarried(), click.button());
+        boolean dragged = applyDragAction(screen, slot, screen.getMenu().getCarried(), click.button());
+        dbg("drag: slot=" + (slot == null ? "null" : slot.index) + " raw=" + click.button() + " applied=" + dragged);
+        return dragged;
         //#else
         //$$ Slot slot = ((AbstractContainerScreenInvoker) screen).QS$getSlotAt(mouseX, mouseY);
         //$$ return applyDragAction(screen, slot, screen.getMenu().getCarried(), button);

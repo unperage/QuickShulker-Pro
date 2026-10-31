@@ -35,6 +35,7 @@ import net.kyrptonaught.quickshulker.client.ClientUtil;
 import net.kyrptonaught.quickshulker.client.CursorFollower;
 import net.kyrptonaught.quickshulker.client.QuickShulkerModClient;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -145,11 +146,22 @@ public abstract class ScreenMixin {
 
     @Unique
     private boolean isValid(ItemStack stack, int id) {
-        if (this.hoveredSlot.container instanceof Inventory)
+        if (this.hoveredSlot.container instanceof Inventory) {
             if (ClientUtil.CheckAndSend(stack, id)) {
                 CursorFollower.remember((AbstractContainerScreen<?>) (Object) this, this.hoveredSlot);
                 return true;
             }
+            return false;
+        }
+        // Cross-container open: the stack sits in a chest, an ender chest or another open container.
+        // Only allowed with the option on and the P key (sneak) held down.
+        if (!QuickShulkerMod.getConfig().crossContainerOpen) return false;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || !client.player.isShiftKeyDown()) return false;
+        if (ClientUtil.CheckAndSendMenuSlot(stack, id)) {
+            CursorFollower.remember((AbstractContainerScreen<?>) (Object) this, this.hoveredSlot);
+            return true;
+        }
         return false;
     }
 }

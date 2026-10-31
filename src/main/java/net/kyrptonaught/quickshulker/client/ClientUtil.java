@@ -27,6 +27,7 @@
 
 package net.kyrptonaught.quickshulker.client;
 
+import net.kyrptonaught.quickshulker.api.ItemInventoryContainer;
 import net.kyrptonaught.quickshulker.api.Util;
 import net.kyrptonaught.quickshulker.mixin.minecraft.CreativeSlotMixin;
 import net.kyrptonaught.quickshulker.network.OpenShulkerPacket;
@@ -42,6 +43,18 @@ public class ClientUtil {
     public static boolean CheckAndSend(ItemStack stack, int slot) {
         if (Util.isOpenableItem(stack)) {
             SendOpenPacket(slot);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Same as {@link #CheckAndSend}, but for a stack that sits in another container: the slot is encoded so
+     * the server can tell it apart from an inventory slot and read the stack from the open menu instead.
+     */
+    public static boolean CheckAndSendMenuSlot(ItemStack stack, int menuSlotIndex) {
+        if (Util.isOpenableItem(stack)) {
+            SendOpenPacket(ItemInventoryContainer.encodeMenuSlot(menuSlotIndex));
             return true;
         }
         return false;

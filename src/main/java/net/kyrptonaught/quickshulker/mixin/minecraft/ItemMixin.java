@@ -28,6 +28,7 @@
 package net.kyrptonaught.quickshulker.mixin.minecraft;
 
 import net.kyrptonaught.quickshulker.util.BundleHelper;
+import net.kyrptonaught.quickshulker.util.MouseDraggedHandler;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.client.ClientUtil;
 import net.kyrptonaught.quickshulker.network.QuickBundlePacket;
@@ -51,6 +52,10 @@ public abstract class ItemMixin {
 
     @Inject(method = "overrideOtherStackedOnMe", at = @At("HEAD"), cancellable = true)
     public void QS$onClicked(ItemStack hostStack, ItemStack insertStack, Slot slot, ClickAction clickType, Player player, SlotAccess cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
+        MouseDraggedHandler.dbg("hook otherStackedOnMe slot=" + (slot == null ? -1 : slot.index) + " clickType=" + clickType + " client=" + player.level().isClientSide()
+                + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
+                + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
+                + " transfer=" + BundleHelper.shouldAttemptTransfer(player, clickType, hostStack, insertStack, true));
         if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingInsert)) {
             if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
@@ -66,6 +71,10 @@ public abstract class ItemMixin {
     @Inject(method = "overrideStackedOnOther", at = @At("HEAD"), cancellable = true)
     public void QS$onStackClicked(ItemStack hostStack, Slot slot, ClickAction clickType, Player player, CallbackInfoReturnable<Boolean> cir) {
         ItemStack insertStack = slot.getItem();
+        MouseDraggedHandler.dbg("hook stackedOnOther slot=" + slot.index + " clickType=" + clickType + " client=" + player.level().isClientSide()
+                + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
+                + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
+                + " unbundle=" + BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, true));
         if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingPickup)) {//bundle stack into held item
             if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);

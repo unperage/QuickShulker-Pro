@@ -29,12 +29,32 @@ package net.kyrptonaught.quickshulker.api;
 
 public interface ItemInventoryContainer {
 
+    /** No container is associated with this menu. */
+    int QS_NO_SLOT = -1;
+
     int QS$getUsedSlotInPlayerInv();
 
     default boolean hasItem() {
-        return QS$getUsedSlotInPlayerInv() >= 0;
+        return QS$getUsedSlotInPlayerInv() != QS_NO_SLOT;
     }
 
     void QS$setUsedSlot(int playerInvSlotID);
+
+    /**
+     * A slot inside the player inventory is stored as-is (>= 0). A slot that lives in another container -
+     * a chest, an ender chest, a shulker the player already has open - cannot collide with those, so it is
+     * stored as a negative number: {@code -(menuSlotIndex + 2)}. {@code -1} stays reserved for "no container".
+     */
+    static int encodeMenuSlot(int menuSlotIndex) {
+        return -(menuSlotIndex + 2);
+    }
+
+    static boolean isMenuSlot(int usedSlot) {
+        return usedSlot <= -2;
+    }
+
+    static int menuSlotOf(int usedSlot) {
+        return -usedSlot - 2;
+    }
 
 }

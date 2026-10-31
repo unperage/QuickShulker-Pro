@@ -101,6 +101,7 @@ public final class CursorFollower {
 
     /** Marks the screen that just finished initialising as the one to move the cursor on. */
     public static void beginSnap(AbstractContainerScreen<?> screen) {
+        if (!QuickShulkerMod.getConfig().cursorFollow) return;
         if (QuickShulkerMod.lastCursorSlot < 0
                 && QuickShulkerMod.lastMouseX == 0 && QuickShulkerMod.lastMouseY == 0)
             return;

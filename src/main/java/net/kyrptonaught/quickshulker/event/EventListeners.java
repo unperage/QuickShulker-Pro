@@ -35,6 +35,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
+import net.kyrptonaught.quickshulker.util.NestedMenus;
 import net.kyrptonaught.quickshulker.api.ItemInventoryContainer;
 import net.kyrptonaught.quickshulker.api.Util;
 import net.kyrptonaught.quickshulker.util.EnderChestSyncHandler;
@@ -70,6 +71,10 @@ public class EventListeners {
     }
 
     public static void containerClosedListener(ServerPlayer player){
+        // Holding the P key (sneak) while closing drops the whole chain instead of stepping back one level.
+        if (QuickShulkerMod.getConfig().nestedScreens && player.isShiftKeyDown()) {
+            NestedMenus.clear(player);
+        }
         if(QuickShulkerMod.getConfig().playSound) {
             int selectedSlot = ((ItemInventoryContainer) player.containerMenu).QS$getUsedSlotInPlayerInv();
             if (selectedSlot != -1) Util.playCloseSound(player, selectedSlot);
