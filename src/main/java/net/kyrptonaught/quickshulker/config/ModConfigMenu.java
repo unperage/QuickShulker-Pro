@@ -62,6 +62,11 @@ public class ModConfigMenu {
         subItem.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.supportsBundlingExtract"), options.supportsBundlingExtract, true).setSaveConsumer(value -> options.supportsBundlingExtract = value));
         subItem.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.supportsMouseDragged"), options.supportsMouseDragged, true).setSaveConsumer(value -> options.supportsMouseDragged = value));
 
+        ConfigSection enhanceSection = new ConfigSection(configScreen, Component.translatable("key.quickshulker.config.category.enhance"));
+        enhanceSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.cursorFollow"), options.cursorFollow, true).setSaveConsumer(value -> options.cursorFollow = value));
+        enhanceSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.crossContainerOpen"), options.crossContainerOpen, false).setSaveConsumer(value -> options.crossContainerOpen = value));
+        enhanceSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.nestedScreens"), options.nestedScreens, false).setSaveConsumer(value -> options.nestedScreens = value));
+
         ConfigSection enabledSection = new ConfigSection(configScreen, Component.translatable("key.quickshulker.config.category.enabled"));
         enabledSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.quickShulkerBox"), options.quickShulkerBox, true).setSaveConsumer(value -> options.quickShulkerBox = value).setRequiresRestart());
         enabledSection.addConfigItem(new BooleanItem(Component.translatable("key.quickshulker.config.quickCraftingTable"), options.quickCraftingTables, true).setSaveConsumer(value -> options.quickCraftingTables = value).setRequiresRestart());
