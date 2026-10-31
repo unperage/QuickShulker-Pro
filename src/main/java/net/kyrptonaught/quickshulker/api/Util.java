@@ -75,14 +75,7 @@ public class Util {
         }
         QuickShulkerData qsData = QuickOpenableRegistry.getQuickie(stack.getItem());
         if (qsData == null) return;
-        if (player instanceof ServerPlayer sp && !NestedMenus.isRestoring(sp)) {
-            Container source = sourceSlot.container;
-            if (source instanceof BlockEntity blockEntity) {
-                NestedMenus.pushBlock(sp, blockEntity.getBlockPos());
-            } else if (source != null) {
-                NestedMenus.pushContainer(sp, source, sourceSlot.getContainerSlot());
-            }
-        }
+        if (player instanceof ServerPlayer sp) NestedMenus.captureCurrent(sp);
         qsData.openConsumer.accept(player, stack);
         if (QuickShulkerMod.getConfig().playSound) playSound(player, qsData.getSound(stack, true));
         ((ItemInventoryContainer) player.containerMenu).QS$setUsedSlot(marker);
@@ -99,7 +92,7 @@ public class Util {
         if (stack.isEmpty()) return;
         QuickShulkerData qsData = QuickOpenableRegistry.getQuickie(stack.getItem());
         if (qsData == null) return;
-        if (!restoring) NestedMenus.pushContainer(player, container, containerSlot);
+        if (!restoring) NestedMenus.captureCurrent(player);
         qsData.openConsumer.accept(player, stack);
         if (QuickShulkerMod.getConfig().playSound) playSound(player, qsData.getSound(stack, true));
     }
@@ -114,7 +107,7 @@ public class Util {
         //stack.removeSubNbt(QuickShulkerMod.MOD_ID);
         QuickShulkerData qsData = QuickOpenableRegistry.getQuickie(stack.getItem());
         if (qsData != null) {
-            if (player instanceof ServerPlayer sp && !NestedMenus.isRestoring(sp)) NestedMenus.pushInventory(sp);
+            if (player instanceof ServerPlayer sp) NestedMenus.captureCurrent(sp);
             qsData.openConsumer.accept(player, stack);
             if(QuickShulkerMod.getConfig().playSound) playSound(player, qsData.getSound(stack, true));
             ((ItemInventoryContainer) player.containerMenu).QS$setUsedSlot(playerInvIndex);

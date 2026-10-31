@@ -29,11 +29,13 @@ package net.kyrptonaught.quickshulker.util;
 
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.network.OpenInventoryPacket;
-import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.MenuType;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -43,45 +45,32 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
- * Keeps, per server player, the screens a quick-opened container was opened from, so closing that container can
+ * Remembers, per server player, the container screens a quick-opened container was opened from, so closing it can
  * put the previous one back instead of dropping the player into the world.
  *
- * <p>Only the server decides here: re-opening a level either sends the "open your inventory" packet or opens a
- * block container again, which makes the client show the right screen on its own.
+ * <p>Vanilla allows a single open menu per player, so "several containers at once" is emulated: opening the next
+ * container closes the current one as usual, and that level is re-opened once the new one is gone. Every level is
+ * a {@link ChestMenu} over some {@link Container}, which covers chests, ender chests and quick-opened shulkers
+ * alike. The container itself is what survives, so entering a level again never loses its contents.
  */
 public final class NestedMenus {
 
     private NestedMenus() {
     }
 
-    /** What sits underneath a quick-opened container. */
-    public static final class Frame {
+    /** What sat underneath the container that is open right now. */
+    private static final class Frame {
         static final int KIND_INVENTORY = 0;
-        static final int KIND_CONTAINER = 1;
-        static final int KIND_BLOCK = 2;
+        static final int KIND_CHEST = 1;
 
         final int kind;
         final Container container;
-        final int containerSlot;
-        final BlockPos pos;
+        final int rows;
 
-        private Frame(int kind, Container container, int containerSlot, BlockPos pos) {
+        Frame(int kind, Container container, int rows) {
             this.kind = kind;
             this.container = container;
-            this.containerSlot = containerSlot;
-            this.pos = pos;
-        }
-
-        static Frame inventory() {
-            return new Frame(KIND_INVENTORY, null, -1, null);
-        }
-
-        static Frame container(Container container, int slot) {
-            return new Frame(KIND_CONTAINER, container, slot, null);
-        }
-
-        static Frame block(BlockPos pos) {
-            return new Frame(KIND_BLOCK, null, -1, pos);
+            this.rows = rows;
         }
     }
 
@@ -104,16 +93,18 @@ public final class NestedMenus {
         while (stack.size() > MAX_DEPTH) stack.removeLast();
     }
 
-    public static void pushInventory(ServerPlayer player) {
-        push(player, Frame.inventory());
-    }
-
-    public static void pushContainer(ServerPlayer player, Container container, int containerSlot) {
-        push(player, Frame.container(container, containerSlot));
-    }
-
-    public static void pushBlock(ServerPlayer player, BlockPos pos) {
-        push(player, Frame.block(pos));
+    /**
+     * Called right before a container is quick-opened: records whatever the player is looking at now, so it can
+     * come back once the new container is closed.
+     */
+    public static void captureCurrent(ServerPlayer player) {
+        if (!enabled() || isRestoring(player)) return;
+        AbstractContainerMenu menu = player.containerMenu;
+        if (menu instanceof ChestMenu chest && chest.getContainer() != null) {
+            push(player, new Frame(Frame.KIND_CHEST, chest.getContainer(), chest.getRowCount()));
+            return;
+        }
+        push(player, new Frame(Frame.KIND_INVENTORY, null, 0));
     }
 
     public static boolean isEmpty(ServerPlayer player) {
@@ -126,31 +117,36 @@ public final class NestedMenus {
         RESTORING.remove(player);
     }
 
-    /** Puts one level back. Returns true when a level was restored. */
+    /** Puts the previous level back. Returns true when a level was restored. */
     public static boolean restoreOne(ServerPlayer player) {
         Deque<Frame> stack = STACKS.get(player);
         if (stack == null || stack.isEmpty()) return false;
         Frame frame = stack.pop();
         RESTORING.add(player);
         try {
-            switch (frame.kind) {
-                case Frame.KIND_INVENTORY -> OpenInventoryPacket.send(player);
-                case Frame.KIND_CONTAINER -> net.kyrptonaught.quickshulker.api.Util
-                        .openItemFromContainer(player, frame.container, frame.containerSlot, true);
-                case Frame.KIND_BLOCK -> {
-                    BlockEntity blockEntity = player.level().getBlockEntity(frame.pos);
-                    if (blockEntity instanceof MenuProvider provider) {
-                        player.openMenu(provider);
-                    } else {
-                        OpenInventoryPacket.send(player);
-                    }
-                }
-                default -> {
-                }
+            if (frame.kind == Frame.KIND_INVENTORY || frame.container == null) {
+                OpenInventoryPacket.send(player);
+            } else {
+                openChest(player, frame.container, frame.rows);
             }
         } finally {
             RESTORING.remove(player);
         }
         return true;
+    }
+
+    private static void openChest(ServerPlayer player, Container container, int rows) {
+        int clamped = Math.max(1, Math.min(6, rows <= 0 ? 3 : rows));
+        MenuType<ChestMenu> type = switch (clamped) {
+            case 1 -> MenuType.GENERIC_9x1;
+            case 2 -> MenuType.GENERIC_9x2;
+            case 3 -> MenuType.GENERIC_9x3;
+            case 4 -> MenuType.GENERIC_9x4;
+            case 5 -> MenuType.GENERIC_9x5;
+            default -> MenuType.GENERIC_9x6;
+        };
+        player.openMenu(new SimpleMenuProvider(
+                (windowId, inventory, owner) -> new ChestMenu(type, windowId, inventory, container, clamped),
+                Component.translatable("container.chest")));
     }
 }
