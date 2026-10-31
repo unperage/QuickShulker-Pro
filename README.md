@@ -1,56 +1,43 @@
-# Quick Shulker Multi
+# QuickShulker-Pro
 
 [English] | [[简体中文]](docs/README_zh_cn.md)
 
-#### Quickly open shulker boxes(and more) without placing them down and refactor using preprocessor
+Open shulker boxes and other containers straight from your inventory — no placing needed.
 
-Support Minecraft from 1.20.6 to latest  
-Welcome to add localization to this project!  
+### Requirements
 
-Use the multi-version build tool preprocessor to build mods for multiple Minecraft versions quickly.
+- Minecraft **1.20.6 – 26.3**
+- Fabric Loader 0.19.3+
 
-This project's upstream [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) updates [kyrptonaught](https://github.com/kyrptonaught)'s [QuickShulker](https://github.com/kyrptonaught/quickshulker.git) mod to higher Minecraft versions and fixes something.
+### Download
 
-The mod's i18n and l10n efforts need your help! We would be incredibly grateful if you could assist!
+[**Releases**](https://github.com/unperage/QuickShulker-Pro/releases) — pick the jar matching your Minecraft version.
 
-### Quick Download
+### Keys
 
-Click on the link below to download.  
-Please choose the appropriate mod for your Minecraft version.
+| Action | Default | Change it |
+|---|---|---|
+| Open the held container | `K` | Options → Controls → Key Binds |
+| Open the settings screen | `KP +` | same |
 
-* [The Latest RELEASE (GitHub Release)](https://github.com/EnderPhantomWing/quickshulker-multi/releases/latest)
+### Containers
 
-* [The Newest SNAPSHOT (GitHub Actions)](https://github.com/EnderPhantomWing/quickshulker-multi/actions)
+Shulker box · Ender chest · Crafting table · Stonecutter · Anvil · Loom · Smithing table · Grindstone
 
-### Mod Naming Convention  
+Each one can be disabled in the settings screen.
 
- * The mod naming convention will be updated in the next major update
+### Mouse
 
-| build               | naming                                                                                                     |
-|---------------------|------------------------------------------------------------------------------------------------------------|
-| release             | quickshulker-v{mod_version}-mc{mc_version}-{commit_count}-{commit_hash}-release.jar                        |
-| pull_request        | quickshulker-v{mod_version}-mc{mc_version}-{build_branch}-{build_branch_commit_count}-{commit_hash}-pr.jar |
-| ci                  | quickshulker-v{mod_version}-mc{mc_version}-{build_branch}-{build_branch_commit_count}-{commit_hash}-ci.jar |
-| local               | quickshulker-v{mod_version}-mc{mc_version}-{build_branch}-{build_timestampmillis}-development.jar          |
-| maven               | {mc_version}-{mod_version}.jar                                                                             |
-| **EXAMPLE BUILDS:** | **EXAMPLE NAMING:**                                                                                        |
-| release             | `quickshulker-v3.2.6-mc1.21.11-187-6068667-release.jar`                                                    |
-| pull_request        | `quickshulker-v3.2.6-mc1.21.11-dev-187-eba238a-pr.jar`                                                     |
-| ci                  | `quickshulker-v3.2.7-mc1.21.11-dev-192-6fb9034-ci.jar`                                                     |
-| local               | `quickshulker-v3.2.7-mc1.21.11-dev-1782234626080-development.jar`                                          |
-| maven               | `1.21.11-3.2.7.jar`                                                                                        |
+- Right-click a container in the inventory to open it
+- Right-click a container with an item to insert it
+- Right-click an item with a container to pick it up
+- Hold and drag to move stacks in bulk
 
-### Thanks
+### Optional (off by default)
 
-- [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker) Mod author
-- [Grayer0113/quickshulker](https://github.com/Grayer0113/quickshulker/tree/1.20) Support MC 1.20.4
-- [Haocen2004/quickshulker](https://github.com/Haocen2004/quickshulker) Support MC 1.20.6 & 1.21(.1)
-- [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) Support MC 1.21+ and fix some bugs
-- And everyone who supports development, including you!
+- **Cross-container open** — open a container that sits inside another container
+- **Stacked screens** — opened containers stack; ESC goes back one level
 
-### License and third-party sources
+### License
 
-This project follows the [MIT License](https://mit-license.org/)  
-[kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker) is the initial version that provides module ideas.  
-[MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) has been ported to version 1.21+.    
-[LICENSE](LICENSE) | [THIRD PARTY NOTICES](docs/THIRD_PARTY_NOTICES.md)
+MIT. Based on [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker), continued by [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) and [EnderPhantomWing/quickshulker-multi](https://github.com/EnderPhantomWing/quickshulker-multi).

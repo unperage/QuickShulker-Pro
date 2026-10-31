@@ -1,57 +1,43 @@
-# Quick Shulker Multi
+# QuickShulker-Pro
 
 [[English]](../README.md) | [简体中文]
 
-#### 无需放置 快速打开潜影盒（以及更多），并使用preprocessor进行重构
+直接在背包里打开潜影盒和其他容器，不用放下。
 
-支持 `1.20.6+` 的 `Minecraft Java版`  
-欢迎为此模组添加本地化！
+### 环境要求
 
-使用多版本构建工具 `preprocessor` 快速构建多个 Minecraft 版本的 mod。
+- Minecraft **1.20.6 – 26.3**
+- Fabric Loader 0.19.3+
 
-此模组上游仓库 [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) 更新自 [kyrptonaught](https://github.com/kyrptonaught)的 [QuickShulker](https://github.com/kyrptonaught/quickshulker.git) 模组 支持高版本同时修复部分bug。
+### 下载
 
-模组国际化和本地化需要您的帮助！如果可以的话那太感谢你了！
+[**Releases**](https://github.com/unperage/QuickShulker-Pro/releases) — 选和你 Minecraft 版本对应的 jar。
 
-### 模组命名规范
+### 按键
 
- * 将会在下个大版本更新中更新模组命名方式
+| 功能 | 默认键 | 修改位置 |
+|---|---|---|
+| 打开手持的容器 | `K` | 选项 → 控制 → 按键绑定 |
+| 打开设置界面 | `小键盘 +` | 同上 |
 
-| build               | naming                                                                                                     |
-|---------------------|------------------------------------------------------------------------------------------------------------|
-| release             | quickshulker-v{mod_version}-mc{mc_version}-{commit_count}-{commit_hash}-release.jar                        |
-| pull_request        | quickshulker-v{mod_version}-mc{mc_version}-{build_branch}-{build_branch_commit_count}-{commit_hash}-pr.jar |
-| ci                  | quickshulker-v{mod_version}-mc{mc_version}-{build_branch}-{build_branch_commit_count}-{commit_hash}-ci.jar |
-| local               | quickshulker-v{mod_version}-mc{mc_version}-{build_branch}-{build_timestampmillis}-development.jar          |
-| maven               | {mc_version}-{mod_version}.jar                                                                             |
-| **EXAMPLE BUILDS:** | **EXAMPLE NAMING:**                                                                                        |
-| release             | `quickshulker-v3.2.6-mc1.21.11-187-6068667-release.jar`                                                    |
-| pull_request        | `quickshulker-v3.2.6-mc1.21.11-dev-187-eba238a-pr.jar`                                                     |
-| ci                  | `quickshulker-v3.2.7-mc1.21.11-dev-192-6fb9034-ci.jar`                                                     |
-| local               | `quickshulker-v3.2.7-mc1.21.11-dev-1782234626080-development.jar`                                          |
-| maven               | `1.21.11-3.2.7.jar`                                                                                        |
+### 支持的容器
 
+潜影盒 · 末影箱 · 工作台 · 切石机 · 铁砧 · 织布机 · 锻造台 · 砂轮
 
-## 下载
+每项都能在设置界面里单独关闭。
 
-单击下面的链接进行下载。  
-请为您的 Minecraft 版本选择合适的模组。
+### 鼠标操作
 
-* [最新Release (GitHub Release)](https://github.com/EnderPhantomWing/quickshulker-multi/releases/latest)
+- 右键背包里的容器即可打开
+- 手持物品右键容器，放入物品
+- 手持容器右键物品，取出物品
+- 按住拖拽，批量搬运整组物品
 
-* [最新快照 (GitHub Actions)](https://github.com/EnderPhantomWing/quickshulker-multi/actions)
+### 可选功能（默认关闭）
 
-### 感谢
+- **跨容器打开** — 打开位于其他容器内部的容器
+- **界面叠加** — 打开的容器界面层层叠加，ESC 逐层返回
 
-- [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker) 模组作者
-- [Grayer0113/quickshulker](https://github.com/Grayer0113/quickshulker/tree/1.20) 支持 MC 1.20.4
-- [Haocen2004/quickshulker](https://github.com/Haocen2004/quickshulker) 支持 MC 1.20.6 和 1.21(.1)
-- [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) 支持 MC 1.21+ 并且修复部分bug
-- 以及所有支持开发的人，包括你！
+### 许可
 
-### 许可证与第三方来源
-
-本项目遵循 [MIT 许可证](https://mit-license.org/)  
-[kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker) 是提供模组整体功能的初始版本  
-[MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) 移植模组至 1.21+ 版本  
-[许可证](../LICENSE) | [第三方声明](THIRD_PARTY_NOTICES.md)
+MIT。基于 [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker)，由 [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) 与 [EnderPhantomWing/quickshulker-multi](https://github.com/EnderPhantomWing/quickshulker-multi) 继续维护。
