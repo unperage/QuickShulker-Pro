@@ -44,6 +44,7 @@ import net.kyrptonaught.quickshulker.network.CloseAllPacket;
 import net.kyrptonaught.quickshulker.network.EnderChestS2CSyncPacket;
 import net.kyrptonaught.quickshulker.network.OpenInventoryPacket;
 import net.kyrptonaught.quickshulker.network.OpenShulkerPacket;
+import net.kyrptonaught.quickshulker.network.OpenShulkerPacketV1;
 import net.kyrptonaught.quickshulker.network.QuickBundlePacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.SimpleMenuProvider;
@@ -84,6 +85,9 @@ public class QuickShulkerMod implements ModInitializer, RegisterQuickShulker {
     @Override
     public void onInitialize() {
         config.load();
+        // Both shapes stay registered: a client on an older build sends the one-field packet under the
+        // original channel, and decoding it with the newer codec would kick that player off the server.
+        OpenShulkerPacketV1.registerReceivePacket();
         OpenShulkerPacket.registerReceivePacket();
         QuickBundlePacket.registerReceivePacket();
         CloseAllPacket.registerReceivePacket();

@@ -62,46 +62,57 @@ public abstract class ItemMixin {
 
     @Inject(method = "overrideOtherStackedOnMe", at = @At("HEAD"), cancellable = true)
     public void QS$onClicked(ItemStack hostStack, ItemStack insertStack, Slot slot, ClickAction clickType, Player player, SlotAccess cursorStackReference, CallbackInfoReturnable<Boolean> cir) {
-        qsDebug("hook otherStackedOnMe slot=" + (slot == null ? -1 : slot.index) + " clickType=" + clickType + " client=" + player.level().isClientSide()
-                + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
-                + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
-                + " transfer=" + BundleHelper.shouldAttemptTransfer(player, clickType, hostStack, insertStack, true));
-        if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingInsert)) {
-            if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
-                BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
-            } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) {//stupid creative menu shiz
-                QuickBundlePacket.sendPacket(ClientUtil.getPlayerInvSlot(player.containerMenu, slot), insertStack);
-                BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
+        try {
+            qsDebug("hook otherStackedOnMe slot=" + (slot == null ? -1 : slot.index) + " clickType=" + clickType + " client=" + player.level().isClientSide()
+                    + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
+                    + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
+                    + " transfer=" + BundleHelper.shouldAttemptTransfer(player, clickType, hostStack, insertStack, true));
+            if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingInsert)) {
+                if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
+                    BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
+                } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) {//stupid creative menu shiz
+                    QuickBundlePacket.sendPacket(ClientUtil.getPlayerInvSlot(player.containerMenu, slot), insertStack);
+                    BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
+                }
+            } else if (BundleHelper.shouldAttemptTransfer(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingTransfer)) {
+                BundleHelper.transferItemsToShulker(player, hostStack, insertStack, cir);
             }
-        } else if (BundleHelper.shouldAttemptTransfer(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingTransfer)) {
-            BundleHelper.transferItemsToShulker(player, hostStack, insertStack, cir);
+        } catch (Throwable t) {
+            // This hook runs for every player, modded or not, and an exception here kills the whole server.
+            // Nothing QuickShulker does is worth that, so log and let vanilla carry on.
+            System.err.println("[QuickShulker] overrideOtherStackedOnMe failed, ignoring: " + t);
+            t.printStackTrace();
         }
     }
 
     @Inject(method = "overrideStackedOnOther", at = @At("HEAD"), cancellable = true)
     public void QS$onStackClicked(ItemStack hostStack, Slot slot, ClickAction clickType, Player player, CallbackInfoReturnable<Boolean> cir) {
-        ItemStack insertStack = slot.getItem();
-        if (QS_DEBUG) {
-            qsDebug("hook stackedOnOther slot=" + slot.index + " clickType=" + clickType + " client=" + player.level().isClientSide()
-                    + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
-                    + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
-                    + " unbundle=" + BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, true));
-        }
-        if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingPickup)) {//bundle stack into held item
-            if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
-                BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);
-            } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
-                QuickBundlePacket.BundleIntoHeld.sendPacket(insertStack, hostStack, ClientUtil.getPlayerInvSlot(player.containerMenu, slot));
-                BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);
-                //QuickBundlePacket.sendCreativeSlotUpdate(insertStack, slot); // It doesn't seem to be doing anything
+        try {
+            ItemStack insertStack = slot.getItem();
+            if (QS_DEBUG) {
+                qsDebug("hook stackedOnOther slot=" + slot.index + " clickType=" + clickType + " client=" + player.level().isClientSide()
+                        + " host=" + hostStack.getItem().getDescriptionId() + "x" + hostStack.getCount() + " insert=" + insertStack.getItem().getDescriptionId() + "x" + insertStack.getCount()
+                        + " bundle=" + BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, true)
+                        + " unbundle=" + BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, true));
             }
-        } else if (BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingExtract)) {//unbundle held stack into slot
-            if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
-                BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
-            } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
-                QuickBundlePacket.UnbundlePacket.sendPacket(ClientUtil.getPlayerInvSlot(player.containerMenu, slot), hostStack);
-                BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
+            if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingPickup)) {//bundle stack into held item
+                if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
+                    BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);
+                } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
+                    QuickBundlePacket.BundleIntoHeld.sendPacket(insertStack, hostStack, ClientUtil.getPlayerInvSlot(player.containerMenu, slot));
+                    BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, slot, cir);
+                }
+            } else if (BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingExtract)) {//unbundle held stack into slot
+                if (ShulkerUtils.isShulkerItem(hostStack) || !player.level().isClientSide()) {
+                    BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
+                } else if (player.level().isClientSide() && slot.container instanceof Inventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
+                    QuickBundlePacket.UnbundlePacket.sendPacket(ClientUtil.getPlayerInvSlot(player.containerMenu, slot), hostStack);
+                    BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
+                }
             }
+        } catch (Throwable t) {
+            System.err.println("[QuickShulker] overrideStackedOnOther failed, ignoring: " + t);
+            t.printStackTrace();
         }
     }
 }

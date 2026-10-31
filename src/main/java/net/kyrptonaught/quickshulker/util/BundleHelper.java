@@ -48,6 +48,25 @@ import net.minecraft.world.inventory.ClickAction;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 public class BundleHelper {
+
+    /**
+     * Slots the current drag has already put a stack into. Lives here rather than in the drag handler because this
+     * class is reached from item clicks on a dedicated server too, and the drag handler is client-side flavoured -
+     * referencing it from here is what crashed servers with NoClassDefFoundError.
+     */
+    private static final java.util.Set<Slot> JUST_BUNDLED = new java.util.LinkedHashSet<>();
+
+    public static void markBundled(Slot slot) {
+        JUST_BUNDLED.add(slot);
+    }
+
+    public static boolean wasJustBundled(Slot slot) {
+        return JUST_BUNDLED.contains(slot);
+    }
+
+    public static void clearJustBundled() {
+        JUST_BUNDLED.clear();
+    }
     public static boolean shouldAttemptBundle(Player player, ClickAction clickType, ItemStack hostStack, ItemStack insertStack, boolean enabledInConfig) {
         return (enabledInConfig && clickType == ClickAction.SECONDARY && Util.isOpenableItem(hostStack) && isAcceptedInsertItem(insertStack) && Util.getQuickItemInventory(player, hostStack) != null);
     }
@@ -84,7 +103,7 @@ public class BundleHelper {
     }
 
     public static void unbundleStackIntoSlot(Player player, ItemStack hostStack, Slot unbundleSlot, CallbackInfoReturnable<Boolean> cir) {
-        if (net.kyrptonaught.quickshulker.util.MouseDraggedHandler.wasJustBundled(unbundleSlot)) {
+        if (wasJustBundled(unbundleSlot)) {
             // This drag already put a stack into this slot; the click arriving now is the duplicate one that
             // follows the insert. Cancel it outright - returning null here would fall through to vanilla, which
             // places the carried shulker into the slot instead of doing nothing.
@@ -166,7 +185,7 @@ public class BundleHelper {
         int amount = insertIntoInv(bundlingInv, player, hostStack, insertStack);
         if (amount != 0) {
             insertStack = slot.safeTake(amount, insertStack.getCount(), player);
-            net.kyrptonaught.quickshulker.util.MouseDraggedHandler.markBundled(slot);
+            markBundled(slot);
             return insertStack;
         }
         return null;

@@ -60,21 +60,6 @@ import java.util.Set;
 public class MouseDraggedHandler {
     private static final Set<Slot> DRAGGED_SLOTS = Sets.newLinkedHashSet();
 
-    /**
-     * Slots this drag has already put a stack into. Mouse Tweaks installs its own handler on
-     * {@code slotClicked}, so it fires one more click on the slot the drag started on - by then that stack is
-     * already inside the shulker, and that click can only mean "take it back out". Remembering what this
-     * gesture has bundled lets the extract path refuse exactly that click and nothing else.
-     */
-    private static final Set<Slot> JUST_BUNDLED = Sets.newLinkedHashSet();
-
-    public static void markBundled(Slot slot) {
-        JUST_BUNDLED.add(slot);
-    }
-
-    public static boolean wasJustBundled(Slot slot) {
-        return JUST_BUNDLED.contains(slot);
-    }
     private static DragMode dragMode;
     /**
      * Slots the pointer has passed over but not applied yet. They are applied on the next rendered frame:
@@ -82,8 +67,6 @@ public class MouseDraggedHandler {
      * still updating, so the click lands on the wrong slot and the one the pointer started on is lost.
      */
     private static final Deque<Slot> PENDING = new ArrayDeque<>();
-
-    /**
 
     /** Opt-in tracing: start the client with -Dquickshulker.debug.drag=true. */
     public static final boolean DEBUG = Boolean.getBoolean("quickshulker.debug.drag");
@@ -262,7 +245,7 @@ public class MouseDraggedHandler {
         dragMode = null;
         PENDING.clear();
         DRAGGED_SLOTS.clear();
-        JUST_BUNDLED.clear();
+        BundleHelper.clearJustBundled();
         return false;
     }
 

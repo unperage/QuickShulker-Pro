@@ -48,11 +48,11 @@ import org.jetbrains.annotations.NotNull;
 public record OpenShulkerPacket(int invSlot, boolean nest) implements CustomPacketPayload {
 
     //#if MC <= 1.20.6
-    //$$ public static final ResourceLocation OPEN_SHULKER_PACKET = ResourceLocation.tryBuild(QuickShulkerMod.MOD_ID, "open_shulker_packet");
+    //$$ public static final ResourceLocation OPEN_SHULKER_PACKET = ResourceLocation.tryBuild(QuickShulkerMod.MOD_ID, "open_shulker_packet_v2");
     //#elseif MC >= 1.21.11
-    public static final Identifier OPEN_SHULKER_PACKET = Identifier.fromNamespaceAndPath(QuickShulkerMod.MOD_ID, "open_shulker_packet");
+    public static final Identifier OPEN_SHULKER_PACKET = Identifier.fromNamespaceAndPath(QuickShulkerMod.MOD_ID, "open_shulker_packet_v2");
     //#else
-    //$$ public static final ResourceLocation OPEN_SHULKER_PACKET = ResourceLocation.fromNamespaceAndPath(QuickShulkerMod.MOD_ID, "open_shulker_packet");
+    //$$ public static final ResourceLocation OPEN_SHULKER_PACKET = ResourceLocation.fromNamespaceAndPath(QuickShulkerMod.MOD_ID, "open_shulker_packet_v2");
     //#endif
 
     public static final Type<OpenShulkerPacket> OPEN_SHULKER_PACKET_ID = new Type<>(OPEN_SHULKER_PACKET);
