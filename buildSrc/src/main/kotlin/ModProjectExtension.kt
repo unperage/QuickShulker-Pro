@@ -53,7 +53,10 @@ val Project.fullProjectVersion: String get() = getFullProjectVersion(mcVersion, 
 private const val DEFAULT_MOD_VERSION = "1.0.0"
 private fun getModVersion(workDir: File = File(".")): String {
     return try {
-        val process = ProcessBuilder("git", "describe", "--tags", "--always", "--abbrev=0", "origin/mojmaps/preprocessor")
+        // Describe from HEAD rather than a fixed upstream branch: this fork tags its own releases and a tag
+        // pushed to the fork never shows up on origin/mojmaps/preprocessor, so the version stayed at the
+        // last upstream tag.
+        val process = ProcessBuilder("git", "describe", "--tags", "--always", "--abbrev=0")
             .directory(workDir)
             .redirectErrorStream(true)
             .start()
