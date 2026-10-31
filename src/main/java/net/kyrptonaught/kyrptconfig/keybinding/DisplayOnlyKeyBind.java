@@ -37,6 +37,14 @@ public class DisplayOnlyKeyBind extends KeyMapping {
     private final Consumer<InputConstants.Key> keySet;
     private CustomKeyBinding customKeyBinding;
 
+    /**
+     * Minecraft walks every registered key mapping on startup and calls setKey(getDefaultKey()). At that moment
+     * options.txt has no entry for these mappings - they keep their value in the mod config instead - so the key
+     * read back is UNKNOWN, and writing it through would erase whatever the player had bound. Only a real change
+     * from the player, which happens after registration, is allowed to persist.
+     */
+    private boolean readyToPersist;
+
     //#if MC >= 1.21.10
     public DisplayOnlyKeyBind(String translationKey, InputConstants.Type type, int code, KeyMapping.Category category) {
     //#else
@@ -60,11 +68,12 @@ public class DisplayOnlyKeyBind extends KeyMapping {
         });
         this.keySet = keySet;
         updateSetKey();
+        this.readyToPersist = true;
     }
 
     public void setKey(InputConstants.@NotNull Key boundKey) {
         super.setKey(boundKey);
-        if (customKeyBinding != null)
+        if (readyToPersist && customKeyBinding != null)
             customKeyBinding.setRaw(saveString());
         keySet.accept(boundKey);
     }
