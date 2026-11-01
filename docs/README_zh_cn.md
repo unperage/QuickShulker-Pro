@@ -40,4 +40,4 @@
 
 ### 许可
 
-MIT。基于 [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker)，由 [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) 与 [EnderPhantomWing/quickshulker-multi](https://github.com/EnderPhantomWing/quickshulker-multi) 继续维护。
+MIT。基于 [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker)，由 [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) 与 [unperage/QuickShulker-Pro](https://github.com/unperage/QuickShulker-Pro) 继续维护。

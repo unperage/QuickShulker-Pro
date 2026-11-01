@@ -11,7 +11,8 @@
     "Hao_cen",
     "Grayer0113",
     "MoRanpcy",
-    "EnderPhantomWing"
+    "EnderPhantomWing",
+    "unperage"
   ],
   "contact": {
     "homepage": "${mod_homepage}",
@@ -24,7 +25,8 @@
         "modmenu.a": "https://modrinth.com/mod/quickshulker",
         "modmenu.b": "https://github.com/kyrptonaught/quickshulker",
         "modmenu.c": "https://github.com/Haocen2004/quickshulker",
-        "modmenu.d": "https://github.com/MoRanpcy/quickshulker"
+        "modmenu.d": "https://github.com/MoRanpcy/quickshulker",
+        "modmenu.e": "https://github.com/unperage/QuickShulker-Pro"
       }
     }
   },

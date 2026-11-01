@@ -40,4 +40,4 @@ Each one can be disabled in the settings screen.
 
 ### License
 
-MIT. Based on [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker), continued by [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) and [EnderPhantomWing/quickshulker-multi](https://github.com/EnderPhantomWing/quickshulker-multi).
+MIT. Based on [kyrptonaught/quickshulker](https://github.com/kyrptonaught/quickshulker), continued by [MoRanpcy/quickshulker](https://github.com/MoRanpcy/quickshulker) and [unperage/QuickShulker-Pro](https://github.com/unperage/QuickShulker-Pro).
